@@ -1,0 +1,5 @@
+# Copy to config.toml beside this file only when overriding the defaults.
+# The instance owns config.toml; upstream updates this example only.
+[recent]
+capacity = 5
+max_fixed = 2

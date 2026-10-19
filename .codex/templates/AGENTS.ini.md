@@ -57,7 +57,7 @@
 
 ## 最近
 
-助手按近期相关性选择入口；容量 5，最多固定 2 个。移出入口不删除 Wiki 原文。下面的区域由 `wiki-index` 维护，使用 `add`、`remove` 和 `ensure` 更新。
+助手按近期相关性选择入口；容量与固定上限由 `.agents/skills/using-wiki/config.toml` 配置，未配置时默认容量 5、最多固定 2 个，样板见同目录 `config.example.toml`。移出入口不删除 Wiki 原文。下面的区域由 `wiki-index` 维护，使用 `add`、`remove` 和 `ensure` 更新。
 
 <!-- memory-recent:start -->
 _暂无近期记忆入口。_

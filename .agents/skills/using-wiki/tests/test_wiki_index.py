@@ -235,6 +235,52 @@ class WikiIndexTests(unittest.TestCase):
             self.assertTrue(any("exceeds capacity 5" in error for error in errors))
             self.assertTrue(any("fixed recent memory routes exceed capacity 2" in error for error in errors))
 
+    def test_instance_limits_control_eviction_and_validation(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.make_project(root)
+            config = root / wiki_index.RECENT_CONFIG
+            config.parent.mkdir(parents=True)
+            config.write_text("[recent]\ncapacity = 7\nmax_fixed = 3\n")
+            for index in range(8):
+                self.write_page(root, f"projects/topic-{index}.md")
+            self.set_cache(root, [wiki_index.IndexEntry(f"projects/topic-{index}.md", fixed=index < 3) for index in range(7)])
+            wiki_index.sync(root, "projects/topic-7.md")
+            entries = self.read_cache(root)
+            self.assertEqual(len(entries), 7)
+            self.assertEqual(sum(entry.fixed for entry in entries), 3)
+            self.assertEqual(entries[0].wiki_path, "projects/topic-7.md")
+            self.assertNotIn("projects/topic-6.md", [entry.wiki_path for entry in entries])
+            self.assertEqual(wiki_index.check_state(root), [])
+            before = (root / "AGENTS.md").read_bytes()
+            config.write_text("[recent]\ncapacity = 6\nmax_fixed = 2\n")
+            errors = wiki_index.check_state(root)
+            self.assertTrue(any("exceeds capacity 6" in error for error in errors))
+            self.assertTrue(any("fixed recent memory routes exceed capacity 2" in error for error in errors))
+            with self.assertRaises(ValueError):
+                wiki_index.sync(root)
+            self.assertEqual((root / "AGENTS.md").read_bytes(), before)
+
+    def test_invalid_limits_and_concurrent_config_changes_do_not_write_navigation(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.make_project(root)
+            self.write_page(root, "projects/topic.md")
+            config = root / wiki_index.RECENT_CONFIG
+            config.parent.mkdir(parents=True)
+            for settings in ["capacity = 0", "capacity = true", "max_fixed = -1", "max_fixed = 6", "capcity = 7", "capacity = ["]:
+                with self.subTest(settings=settings):
+                    config.write_text("[recent]\n" + settings + "\n")
+                    with self.assertRaises(ValueError):
+                        wiki_index.sync(root)
+                    self.assertFalse((root / "wiki/index.md").exists())
+            config.write_text("[recent]\ncapacity = 7\nmax_fixed = 3\n")
+            plan = wiki_index.plan_sync(root)
+            config.write_text("[recent]\ncapacity = 8\nmax_fixed = 3\n")
+            with self.assertRaises(wiki_index.InputsChanged):
+                wiki_index.apply_plan(plan)
+            self.assertFalse((root / "wiki/index.md").exists())
+
     def test_sync_preserves_order_and_log_while_updating_metadata(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

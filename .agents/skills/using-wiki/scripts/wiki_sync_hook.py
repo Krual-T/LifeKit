@@ -36,7 +36,7 @@ def run_hook(payload: dict[str, Any], project_root: Path = PROJECT_ROOT) -> dict
     command = subprocess.run(
         ["uv", "run", "--offline", "--script",
          str(project_root / ".agents/skills/using-wiki/scripts/wiki_index.py"),
-         "ensure", "--project-root", str(project_root), "--timeout", "20"],
+         "ensure", "--project-root", str(project_root), "--timeout", "20", "--if-changed"],
         cwd=project_root, capture_output=True, text=True, timeout=25,
     )
     try:

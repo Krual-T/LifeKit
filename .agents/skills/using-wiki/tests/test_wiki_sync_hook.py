@@ -52,6 +52,70 @@ class WikiSyncTests(unittest.TestCase):
         self.assertFalse(second["retrieval_changed"])
         self.assertEqual(before, {path: path.stat().st_mtime_ns for path in paths})
 
+    def test_unchanged_hook_skips_full_sync_but_explicit_ensure_checks_again(self) -> None:
+        self.ensure()
+        with mock.patch.object(wiki_index, "plan_sync", side_effect=AssertionError("unexpected full sync")):
+            for _ in range(3):
+                result = wiki_index.ensure(self.root, if_changed=True)
+                self.assertTrue(result["ok"], result)
+                self.assertTrue(result["skipped"], result)
+        real_run = subprocess.run
+        with mock.patch.object(wiki_index.subprocess, "run", wraps=real_run) as run:
+            self.ensure()
+            self.assertEqual(run.call_count, 1)
+
+    def test_changed_input_and_missing_database_invalidate_success(self) -> None:
+        self.ensure()
+        self.write_page(self.root, "projects/topic.md", title="Changed")
+        result = wiki_index.ensure(self.root, if_changed=True)
+        self.assertTrue(result["ok"], result)
+        self.assertNotIn("skipped", result)
+        self.assertIn("Changed", (self.root / "wiki/projects/index.md").read_text())
+        (self.root / "wiki/.okf/index.sqlite3").unlink()
+        rebuilt = wiki_index.ensure(self.root, if_changed=True)
+        self.assertTrue(rebuilt["ok"], rebuilt)
+        self.assertTrue(rebuilt["retrieval_changed"], rebuilt)
+        self.assertNotIn("skipped", rebuilt)
+
+    def test_config_and_implementation_changes_invalidate_success(self) -> None:
+        config = self.root / wiki_index.RECENT_CONFIG
+        config.parent.mkdir(parents=True)
+        config.write_text("[recent]\ncapacity = 7\nmax_fixed = 3\n")
+        for index in range(6):
+            self.write_page(self.root, f"projects/topic-{index}.md")
+        self.set_cache(self.root, [wiki_index.IndexEntry(f"projects/topic-{index}.md", fixed=index < 3) for index in range(6)])
+        self.ensure()
+        state = self.root / "wiki/.okf/navigation-state.json"
+        previous = state.read_bytes()
+        config.write_text("[recent]\ncapacity = 5\nmax_fixed = 2\n")
+        for _ in range(2):
+            result = wiki_index.ensure(self.root, if_changed=True)
+            self.assertFalse(result["ok"], result)
+            self.assertIn("capacity 5", result["error"])
+            self.assertEqual(state.read_bytes(), previous)
+        config.write_text("[recent]\ncapacity = 7\nmax_fixed = 3\n")
+        implementation = self.root / "wiki_index.py"
+        implementation.write_text("# version one\n")
+        with mock.patch.object(wiki_index, "__file__", str(implementation)):
+            self.ensure()
+            implementation.write_text("# version two\n")
+            result = wiki_index.ensure(self.root, if_changed=True)
+            self.assertTrue(result["ok"], result)
+            self.assertNotIn("skipped", result)
+
+    def test_failed_sync_never_marks_changed_inputs_as_fresh(self) -> None:
+        self.ensure()
+        state = self.root / "wiki/.okf/navigation-state.json"
+        previous = state.read_bytes()
+        self.write_page(self.root, "projects/topic.md", extra={"generated": {"by": "test", "at": "bad-date"}})
+        for _ in range(2):
+            result = wiki_index.ensure(self.root, if_changed=True)
+            self.assertFalse(result["ok"], result)
+            self.assertEqual(result["stage"], "retrieval")
+            self.assertEqual(state.read_bytes(), previous)
+        self.write_page(self.root, "projects/topic.md")
+        self.assertTrue(wiki_index.ensure(self.root, if_changed=True)["ok"])
+
     def test_body_title_move_and_delete_reach_search_and_navigation(self) -> None:
         self.ensure()
         self.write_page(self.root, "projects/topic.md", title="Updated", body="Quasarneedle.\n")
@@ -177,14 +241,15 @@ class WikiSyncTests(unittest.TestCase):
                 self.assertLess(time.monotonic() - started, 2)
 
     def test_parallel_ensure_processes_and_separate_worktrees(self) -> None:
-        command = [sys.executable, str(fixtures.SCRIPT.resolve()), "ensure", "--project-root", str(self.root)]
-        processes = [subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True) for _ in range(2)]
+        command = [sys.executable, str(fixtures.SCRIPT.resolve()), "ensure", "--project-root", str(self.root), "--if-changed"]
+        processes = [subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True) for _ in range(4)]
         results = []
         for process in processes:
             stdout, stderr = process.communicate(timeout=10)
             self.assertEqual(process.returncode, 0, stdout + stderr)
             results.append(json.loads(stdout))
         self.assertEqual(sum(bool(result["navigation_changed"]) for result in results), 1)
+        self.assertEqual(sum(bool(result.get("skipped")) for result in results), 3)
         with tempfile.TemporaryDirectory() as other:
             other_root = Path(other)
             self.make_project(other_root)

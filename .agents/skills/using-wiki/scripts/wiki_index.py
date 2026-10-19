@@ -17,6 +17,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import tomllib
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -26,8 +27,7 @@ from urllib.parse import unquote, urlsplit
 import yaml
 
 
-MAX_RECENT = 5
-MAX_FIXED = 2
+RECENT_CONFIG = Path(".agents/skills/using-wiki/config.toml")
 MARKER_START = "<!-- memory-recent:start -->"
 MARKER_END = "<!-- memory-recent:end -->"
 FIXED_MARKER = "<!-- memory-recent:fixed -->"
@@ -71,7 +71,47 @@ def wiki_markdown(wiki_root: Path) -> set[Path]:
 
 
 def input_paths(project_root: Path) -> set[Path]:
-    return {project_root / "AGENTS.md", project_root / "wiki/.okf-retrieval.yaml", *wiki_markdown(project_root / "wiki")}
+    return {project_root / "AGENTS.md", project_root / RECENT_CONFIG,
+            project_root / "wiki/.okf-retrieval.yaml", *wiki_markdown(project_root / "wiki")}
+
+
+def recent_limits(project_root: Path) -> tuple[int, int]:
+    path = project_root / RECENT_CONFIG
+    config = tomllib.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+    recent = config.get("recent", {})
+    if not isinstance(recent, dict) or set(recent) - {"capacity", "max_fixed"}:
+        raise ValueError(f"{path}: [recent] accepts only capacity and max_fixed")
+    capacity, max_fixed = recent.get("capacity", 5), recent.get("max_fixed", 2)
+    if type(capacity) is not int or capacity < 1:
+        raise ValueError(f"{path}: recent.capacity must be a positive integer")
+    if type(max_fixed) is not int or not 0 <= max_fixed <= capacity:
+        raise ValueError(f"{path}: recent.max_fixed must be an integer between 0 and capacity")
+    return capacity, max_fixed
+
+
+def file_metadata(path: Path) -> list[int] | None:
+    try:
+        stat = path.stat()
+    except FileNotFoundError:
+        return None
+    return [stat.st_mtime_ns, stat.st_ctime_ns, stat.st_size, stat.st_mode]
+
+
+def sync_metadata(project_root: Path) -> dict[str, list[int] | None]:
+    # Metadata replaces repeated full Markdown parsing on unchanged Hook events.
+    # Include generated navigation, configuration, implementation and the search DB.
+    paths = input_paths(project_root) | {
+        Path(__file__).resolve(), project_root / "wiki/.okf/index.sqlite3",
+        *(project_root / "projects/okf-retrieval/src/okf_retrieval").glob("*.py"),
+    }
+    return {str(path): file_metadata(path) for path in sorted(paths)}
+
+
+def read_sync_state(path: Path) -> Any:
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (FileNotFoundError, UnicodeError, json.JSONDecodeError):
+        return None
 
 
 def remaining(deadline: float) -> float:
@@ -230,12 +270,13 @@ def parse_recent(
 
 
 def validate_index_entries(entries: list[IndexEntry], project_root: Path) -> list[str]:
+    capacity, max_fixed = recent_limits(project_root)
     errors: list[str] = []
-    if len(entries) > MAX_RECENT:
-        errors.append(f"recent memory index exceeds capacity {MAX_RECENT}: {len(entries)}")
+    if len(entries) > capacity:
+        errors.append(f"recent memory index exceeds capacity {capacity}: {len(entries)}")
     fixed_count = sum(entry.fixed for entry in entries)
-    if fixed_count > MAX_FIXED:
-        errors.append(f"fixed recent memory routes exceed capacity {MAX_FIXED}: {fixed_count}")
+    if fixed_count > max_fixed:
+        errors.append(f"fixed recent memory routes exceed capacity {max_fixed}: {fixed_count}")
     paths = [entry.wiki_path for entry in entries]
     if len(paths) != len(set(paths)):
         errors.append("recent memory index contains duplicate Wiki routes")
@@ -303,14 +344,14 @@ def normalize_add_path(path: str, project_root: Path) -> str:
     return candidate.as_posix()
 
 
-def add_to_index(entries: list[IndexEntry], wiki_path: str) -> list[IndexEntry]:
+def add_to_index(entries: list[IndexEntry], wiki_path: str, capacity: int) -> list[IndexEntry]:
     existing = next((entry for entry in entries if entry.wiki_path == wiki_path), None)
     updated = [entry for entry in entries if entry.wiki_path != wiki_path]
     updated.insert(0, existing or IndexEntry(wiki_path))
-    while len(updated) > MAX_RECENT:
+    while len(updated) > capacity:
         victim = next((index for index in range(len(updated) - 1, -1, -1) if not updated[index].fixed), None)
         if victim is None:
-            raise ValueError(f"cannot reduce recent memory index to capacity {MAX_RECENT}")
+            raise ValueError(f"cannot reduce recent memory index to capacity {capacity}")
         updated.pop(victim)
     return updated
 
@@ -495,7 +536,7 @@ def plan_sync(
         remove=remove,
     )
     if add is not None:
-        entries = add_to_index(entries, normalize_add_path(add, project_root))
+        entries = add_to_index(entries, normalize_add_path(add, project_root), recent_limits(project_root)[0])
         index_errors = validate_index_entries(entries, project_root)
         if index_errors:
             raise ValueError("\n".join(index_errors))
@@ -520,7 +561,7 @@ def sync(
         apply_plan(plan)
 
 
-def ensure(project_root: Path, *, timeout: float = 20) -> dict[str, Any]:
+def ensure(project_root: Path, *, timeout: float = 20, if_changed: bool = False) -> dict[str, Any]:
     """Maintain both indexes; report partial navigation writes even on failure."""
     result: dict[str, Any] = {
         "ok": False, "project_root": str(project_root), "fresh": False,
@@ -532,6 +573,11 @@ def ensure(project_root: Path, *, timeout: float = 20) -> dict[str, Any]:
         if not math.isfinite(timeout) or timeout <= 0:
             raise ValueError("timeout must be a positive finite number")
         with navigation_lock(project_root, deadline):
+            state_path = project_root / "wiki/.okf/navigation-state.json"
+            # Compare under the lock: queued Hooks can reuse the preceding success.
+            if if_changed and read_sync_state(state_path) == sync_metadata(project_root):
+                result.update(ok=True, fresh=True, stage="complete", skipped=True)
+                return result
             for attempt in range(2):
                 result["attempts"] = attempt + 1
                 try:
@@ -540,6 +586,9 @@ def ensure(project_root: Path, *, timeout: float = 20) -> dict[str, Any]:
                     plan = plan_sync(project_root)
                     plans.append(plan)
                     apply_plan(plan)
+                    # Capture before validation. Later edits must not be recorded as
+                    # successfully validated inputs merely because they happened last.
+                    state = sync_metadata(project_root)
                     result["stage"] = "retrieval"
                     database = project_root / "wiki/.okf/index.sqlite3"
                     before = database.stat().st_mtime_ns if database.exists() else None
@@ -553,6 +602,7 @@ def ensure(project_root: Path, *, timeout: float = 20) -> dict[str, Any]:
                     if not isinstance(retrieval, dict):
                         raise ValueError("wiki-retrieval did not return a JSON object")
                     after = database.stat().st_mtime_ns if database.exists() else None
+                    state[str(database)] = file_metadata(database)
                     result["retrieval_changed"] |= before != after
                     result["stage"] = "concurrency"
                     if retrieval.get("fresh") is not True:
@@ -567,6 +617,9 @@ def ensure(project_root: Path, *, timeout: float = 20) -> dict[str, Any]:
                         result["stage"] = "navigation-check"
                         raise RuntimeError("\n".join(errors))
                     remaining(deadline)
+                    result["stage"] = "cache"
+                    if read_sync_state(state_path) != state:
+                        atomic_write_text(state_path, json.dumps(state, sort_keys=True) + "\n", 0o600)
                     result.update(ok=True, fresh=True, stage="complete")
                     break
                 except InputsChanged:
@@ -637,6 +690,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         child.add_argument("--project-root", default=".", help="Wiki project root (default: current directory)")
         if command == "ensure":
             child.add_argument("--timeout", type=float, default=20, help="Total lock and subprocess budget in seconds (default: 20)")
+            child.add_argument("--if-changed", action="store_true", help="Reuse the last successful sync when inputs and outputs are unchanged")
         elif command == "add":
             child.add_argument("path", help="Markdown path relative to wiki/")
         elif command == "remove":
@@ -649,7 +703,7 @@ def main(argv: list[str] | None = None) -> int:
     project_root = Path(args.project_root).resolve()
     try:
         if args.command == "ensure":
-            result = ensure(project_root, timeout=args.timeout)
+            result = ensure(project_root, timeout=args.timeout, if_changed=args.if_changed)
             print(json.dumps(result, ensure_ascii=False))
             return 0 if result["ok"] else 1
         elif args.command == "check":
