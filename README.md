@@ -14,6 +14,7 @@ LifeKit 提供可组合的个人助手模板、记忆工具与 Skills。把个�
 | Markdown 转 PDF | [Markdown 转 PDF](.agents/skills/markdown-to-pdf/SKILL.md) |
 | 按可选信源进行日、周、月、年复盘 | [周期复盘与初始化](.agents/skills/periodic-review/README.md) |
 | S3 上传、直读、显式导出与可选 RustFS 自建 | [存储使用与初始化](scripts/rustfs/README.md) |
+| Codex 任务标题自动整理（可选插件） | [原作者插件的安装与配置](#codex-任务标题整理可选) |
 
 收藏和 DSH 不属于公共版。公开发布前仍需确定自有内容的许可证和发布仓库；随附第三方内容按各自的版权声明处理，见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
 
@@ -98,6 +99,32 @@ git push -u origin main
 ## 按需初始化其他能力
 
 路径以当前实例为准，不设置统一的 LifeKit 根目录变量，也不新增仓库级配置中心。Skill 的必要来源和时间选择放在自己的目录内；公共只跟踪另名初始化样板。重复初始化应保留已经存在的实际配置。
+
+### Codex 任务标题整理（可选）
+
+[Codex Task Title Organizer](https://github.com/znbsf/codex-task-title-organizer) 由原作者 `znbsf` 独立维护，提供标题整理 Skill 和触发检查的 Hook。LifeKit 只提供安装入口，插件代码、版本和运行状态由 Codex 插件系统管理，与 Wiki、复盘和存储能力独立。
+
+宿主需要 Python 3，以及支持插件 Hook 和当前任务改名工具的 Codex。首次安装按[原作者说明](https://github.com/znbsf/codex-task-title-organizer/blob/main/INSTALL.md)执行：
+
+```bash
+codex plugin marketplace add znbsf/codex-task-title-organizer --ref main
+codex plugin add codex-task-title-organizer@codex-task-title-organizer
+```
+
+已有安装时，先用 `codex plugin marketplace list` 和 `codex plugin list` 确认来源，按原作者说明处理。安装后刷新或重启 Codex，开启新任务，在 `/hooks` 中审阅并信任该插件的 `UserPromptSubmit` 和 `PostToolUse` 命令，再确认自动检查生效。只复制 Skill 文件不能启用 Hook。
+
+默认无需配置：插件在观察到第 2、4、10 次用户输入时提示检查标题，第 4、10 次根据任务变化决定是否更新。侧栏分组默认关闭。需要调整检查时机时，在自己的实例根目录创建 `.codex/task-title-organizer.json`：
+
+```json
+{
+  "enabled": true,
+  "checkpoints": [2, 4, 10]
+}
+```
+
+将 `checkpoints` 改成需要的轮次；每个值为 1–50 的整数，互不重复，最多 8 个。设置 `"enabled": false` 可关闭本项目的自动检查。实际配置由实例维护，可以进入私人 Git；LifeKit 不预置这个生效文件。
+
+命名偏好可以写在实例 `AGENTS.md` 中，例如要求使用项目名和中文工作类型；默认使用颜色块标记。跨项目的检查时机可由 `CODEX_TASK_TITLE_CHECKPOINTS` 环境变量设置，项目文件优先。完整配置优先级和可选侧栏分组见[原作者配置说明](https://github.com/znbsf/codex-task-title-organizer/blob/main/plugins/codex-task-title-organizer/skills/organize-codex-task-titles/references/configuration.md)。
 
 ### 产品经理与 PDF
 
