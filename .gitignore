@@ -31,6 +31,7 @@ node_modules/
 # Only non-secret instance configuration, templates and shared roles belong in Git.
 /.codex/*
 !/.codex/config.toml
+!/.codex/task-title-organizer.json
 !/.codex/agents/
 !/.codex/templates/
 .claude/
