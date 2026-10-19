@@ -1,0 +1,21 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "wiki-retrieval"
+version = "0.1.0"
+description = "Profile-independent deterministic retrieval for OKF Markdown Wikis"
+requires-python = ">=3.11"
+dependencies = [
+    "PyYAML>=6.0.2",
+]
+
+[project.scripts]
+wiki-retrieval = "okf_retrieval.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/okf_retrieval"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

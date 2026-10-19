@@ -1,0 +1,53 @@
+# 第三方来源与许可
+
+本技能整理并改写以下项目的部分指令，非 Karpathy 本人编写。来源链接指向原始文件，版权和许可分别适用于各项目贡献的部分。
+
+1. Karpathy Output Style — https://github.com/ashryaagr/karpathy-output-style
+   Copyright (c) 2026 Ashrya Agrawal
+   许可：https://github.com/ashryaagr/karpathy-output-style/blob/main/LICENSE
+   引用范围：explain-webpage/SKILL.md 的工作流；explainer-videos/SKILL.md 的分镜和交付；
+   explainer-videos/references/workflow.md 的 FFmpeg/ffprobe 命令。
+   上述路径相对于该项目的 skills/ 目录。
+   调整范围：语言适用范围、宿主交付方式、缺失的辅助文件引用和权限处理。
+   未收录该项目引用的推文图片，它不在本文件的许可范围内。
+
+2. Karpathy Ladder — https://github.com/FutureAtoms/karpathy-ladder
+   Copyright (c) 2026 FutureAtoms
+   许可：https://github.com/FutureAtoms/karpathy-ladder/blob/main/LICENSE
+   引用范围：skills/legible-explainer/SKILL.md 的级别选择和先给答案原则；
+   references/diagram.md 的图种表及部分 SVG、小屏显示指导；
+   references/video.md 的部分旁白、分镜、视觉、Manim 和验证指导。
+   references 路径相对于该项目的 legible-explainer 技能目录。
+   调整范围：交互级别、中文语音、渲染器可用性、节奏、交付物和检查方式。
+   本技能未附带该项目的模板或检查器。
+
+3. Visual Explainer — https://github.com/nicobailon/visual-explainer
+   Copyright (c) 2025 Nico Bailon
+   许可：https://github.com/nicobailon/visual-explainer/blob/main/LICENSE
+   引用范围：plugins/visual-explainer/SKILL.md 的部分图示表达规则；
+   plugins/visual-explainer/references/diagrams.md 的联动高亮、
+   分步演示与场景播放、前后对比和实时图示指导。
+   调整范围：宿主展示方式、产物内的交互实现和模型假设。
+   本技能未附带该项目的模板、渲染器、MCP 服务或插件集成。
+
+以上三个项目均采用下列 MIT 许可。其版权声明及以下许可声明分别适用于各自贡献的部分。许可正文保留英文原文。
+
+MIT License
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

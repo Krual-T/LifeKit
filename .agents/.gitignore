@@ -1,0 +1,14 @@
+# Keep repository-owned skills; machine-local installs need explicit review.
+/*
+!/.gitignore
+!/skills/
+/skills/*
+!/skills/using-wiki/
+!/skills/orchestrate-subagents/
+!/skills/write-technical-design/
+!/skills/research/
+!/skills/output-style/
+!/skills/read-local-documents/
+!/skills/write/
+/skills/write/*
+!/skills/write/ai-writing-rules/

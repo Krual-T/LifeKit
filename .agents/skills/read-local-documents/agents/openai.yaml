@@ -1,0 +1,4 @@
+interface:
+  display_name: "读取本地文档"
+  short_description: "将 Office、电子书、表格和文本型 PDF 本地转换为 Markdown"
+  default_prompt: "使用 $read-local-documents 读取并分析这个本地文档。"

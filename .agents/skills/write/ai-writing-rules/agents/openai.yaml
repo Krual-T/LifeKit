@@ -1,0 +1,4 @@
+interface:
+  display_name: "AI 写作规则"
+  short_description: "起草、审计和改写文本，保持事实、语义与作者声线"
+  default_prompt: "使用 $ai-writing-rules 选择起草、审计或改写模式，保持事实、领域含义和作者声线。"

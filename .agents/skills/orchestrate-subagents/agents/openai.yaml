@@ -1,0 +1,4 @@
+interface:
+  display_name: "多智能体协作编排"
+  short_description: "为复杂任务判断委派价值，拆分工作流，监督执行并可靠整合结果"
+  default_prompt: "使用 $orchestrate-subagents 编排这个复杂任务的子智能体协作。"

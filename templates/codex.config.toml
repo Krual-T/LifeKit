@@ -1,0 +1,9 @@
+# Instance-owned configuration. Personality is loaded through the root AGENTS.md.
+# Start Codex with this instance's .venv/bin on PATH; trust this Hook in the host.
+[[hooks.PostToolUse]]
+matcher = "^(apply_patch|Bash)$"
+
+[[hooks.PostToolUse.hooks]]
+type = "command"
+command = 'python3 "$(git rev-parse --show-toplevel)/.agents/skills/using-wiki/scripts/wiki_sync_hook.py"'
+timeout = 30

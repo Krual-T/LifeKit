@@ -1,0 +1,43 @@
+# Rebuildable Python, Node and Wiki state.
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.egg-info/
+node_modules/
+.okf/
+
+# Raw inputs and disposable local output; private Wiki text stays tracked.
+/data/raw/
+/data/cache/
+/tmp/
+
+# Credentials must never enter public or private Git.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+/config/*.local.*
+/config/*secret*
+/config/*credential*
+
+# Only non-secret instance configuration and shared roles belong in Git.
+/.codex/*
+!/.codex/config.toml
+!/.codex/agents/
+.claude/
+
+# Editor and operating-system state.
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*~
