@@ -1,11 +1,14 @@
 """Source scope tests: fake CLI responses and temporary files only."""
 
 from contextlib import ExitStack, redirect_stderr, redirect_stdout
+from datetime import datetime
 import importlib.util
 import io
 import json
+import os
 from pathlib import Path
 import subprocess
+import sys
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -27,6 +30,112 @@ drafts = load("extract_drafts")
 
 
 class FeishuSourceTests(unittest.TestCase):
+    def test_document_diff_does_not_read_sibling_inputs(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            raw = root / "2026-09-08" / "raw"
+            sibling = root / "2026-09-01" / "raw"
+            raw.mkdir(parents=True)
+            sibling.mkdir(parents=True)
+            (sibling / "raw_doc_contents.json").write_text(json.dumps({"results": [{
+                "token": "shared-document",
+                "content": {"data": {"document": {"content": "<p>Unselected material</p>"}}},
+            }]}))
+            result = drafts.build_doc_change_summary(raw, "shared-document", {
+                "content": {"data": {"document": {"content": "<p>Selected material</p>"}}},
+            })
+            self.assertEqual(result["status"], "no_previous_snapshot")
+            self.assertEqual(result["lines"], ["Selected material"])
+
+    def test_document_diff_keeps_snapshots_from_the_selected_input(self):
+        with tempfile.TemporaryDirectory() as directory:
+            raw = Path(directory) / "raw"
+            raw.mkdir()
+            previous = raw / "raw_doc_contents.json"
+            previous.write_text(json.dumps({"results": [{
+                "token": "shared-document",
+                "content": {"data": {"document": {"content": "<p>Previous version</p>"}}},
+            }]}))
+            archived = export.archive_existing_file(previous)
+            result = drafts.build_doc_change_summary(raw, "shared-document", {
+                "content": {"data": {"document": {"content": "<p>Current version</p>"}}},
+            })
+            self.assertEqual(result["status"], "diff")
+            self.assertEqual(result["added"], ["Current version"])
+            self.assertEqual(result["removed"], ["Previous version"])
+            self.assertEqual(result["previous_snapshot"], str(archived))
+
+    def test_draft_times_follow_input_timezone_instead_of_host(self):
+        instant = "2026-09-01T00:00:00+08:00"
+        epoch = int(datetime.fromisoformat(instant).timestamp())
+        cases = [
+            ({}, [], "2026-08-31 16:00+00:00"),
+            ({"timezone": "Asia/Shanghai"}, [], "2026-09-01 00:00+08:00"),
+            ({"start": instant}, [], "2026-09-01 00:00+08:00"),
+            ({"week_start": instant}, [], "2026-09-01 00:00+08:00"),
+            ({"timezone": "Asia/Shanghai"}, ["--timezone", "America/New_York"], "2026-08-31 12:00-04:00"),
+        ]
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            raw = root / "raw"
+            raw.mkdir()
+            (raw / "raw_tasks.json").write_text(json.dumps({"tasks": [{
+                "summary": "Same instant in three API formats",
+                "created_at": epoch, "completed_at": epoch * 1000, "due": instant,
+            }]}))
+            for kind in ("group", "p2p"):
+                (raw / f"raw_{kind}_sample.json").write_text(json.dumps({"messages": [
+                    {"create_time": value, "msg_type": "text", "content": "A message"}
+                    for value in (epoch, instant)
+                ]}))
+            for meta, arguments, expected in cases:
+                (raw / "_meta.json").write_text(json.dumps(meta))
+                for host_zone in ("UTC", "Pacific/Honolulu"):
+                    with self.subTest(meta=meta, arguments=arguments, host_zone=host_zone):
+                        output = root / "readable"
+                        subprocess.run([
+                            sys.executable, str(SOURCE / "extract_drafts.py"),
+                            "--raw-dir", str(raw), "--output-dir", str(output), *arguments,
+                        ], check=True, capture_output=True, text=True,
+                            env={**os.environ, "TZ": host_zone})
+                        report = (output / "tasks.md").read_text()
+                        self.assertEqual(report.count(expected), 3, report)
+                        self.assertIn(expected, (output / "index.html").read_text())
+                        for kind in ("group", "p2p"):
+                            chat = (output / f"{kind}_sample.md").read_text()
+                            self.assertIn(f"## {expected[:10]}", chat)
+                            self.assertEqual(chat.count(f"**{expected[11:]}**"), 2, chat)
+
+    def test_comment_times_use_the_same_formatter(self):
+        instant = "2026-09-01T00:00:00+08:00"
+        epoch = int(datetime.fromisoformat(instant).timestamp())
+        rows = drafts.collect_comment_items({"comments": {"data": {"items": [{
+            "reply_list": {"replies": [{
+                "create_time": value,
+                "content": {"elements": [{"type": "text_run", "text_run": {"text": "A comment"}}]},
+            } for value in (epoch, epoch * 1000, instant)]},
+        }]}}})
+        self.assertEqual([row["time"] for row in rows], ["2026-08-31 16:00+00:00"] * 3)
+
+    def test_date_only_values_do_not_gain_a_time(self):
+        self.assertEqual(drafts.format_lark_time({"date": "2026-09-01"}), "2026-09-01")
+
+    def test_task_completion_window_accepts_all_time_formats_without_rounding(self):
+        boundary = "2026-09-01T00:00:30+08:00"
+        cutoff = datetime.fromisoformat(boundary).timestamp()
+        with tempfile.TemporaryDirectory() as directory:
+            raw = Path(directory)
+            (raw / "_meta.json").write_text(json.dumps({"end": boundary}))
+            for delta in (-1, 0, 1):
+                instant = datetime.fromtimestamp(cutoff + delta, datetime.fromisoformat(boundary).tzinfo)
+                for value in (instant.isoformat(), int(cutoff + delta), int(cutoff + delta) * 1000):
+                    with self.subTest(delta=delta, value=value):
+                        (raw / "raw_tasks.json").write_text(json.dumps({"tasks": [{
+                            "summary": "Completion boundary", "completed_at": value,
+                        }]}))
+                        report = drafts.generate_tasks_draft(raw)
+                        self.assertEqual("完成时间（日报窗口之后）" in report, delta >= 0)
+
     def test_release_keyword_miss_continues_to_explicit_query(self):
         unrelated = {"title": "Other Release/0907", "result_meta": {"url": "https://example.test/other"}}
         selected = {"title": "Project-A Release/0907", "result_meta": {"url": "https://example.test/allowed"}}
@@ -72,7 +181,10 @@ class FeishuSourceTests(unittest.TestCase):
             self.assertEqual(code, 0)
             tasks.assert_called_once_with("2026-09-01T00:00:00+08:00", "2026-09-02T00:00:00+08:00")
             self.assertEqual({path.name for path in Path(directory).iterdir()}, {"_meta.json", "raw_tasks.json"})
-            self.assertEqual(json.loads((Path(directory) / "_meta.json").read_text())["included"], ["tasks"])
+            meta = json.loads((Path(directory) / "_meta.json").read_text())
+            self.assertEqual(meta["included"], ["tasks"])
+            self.assertEqual(meta["timezone"], "Asia/Shanghai")
+            self.assertTrue(meta["generated_at"].endswith("+08:00"))
 
     def test_reader_failure_is_retained_and_returns_nonzero(self):
         with tempfile.TemporaryDirectory() as directory, patch.object(export, "fetch_tasks", return_value={"ok": False, "_error": "no access"}), redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):

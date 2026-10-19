@@ -9,6 +9,7 @@
 参数:
     --raw-dir       原始数据目录, 默认 ./raw
     --output-dir    草稿输出目录, 默认 ./drafts
+    --timezone      阅读稿时区，默认使用采集元数据，缺失时使用 UTC
 """
 
 import argparse
@@ -18,8 +19,12 @@ import json
 import os
 import re
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+
+
+DISPLAY_TIMEZONE = timezone.utc
 
 # Fix Windows console encoding
 if hasattr(sys.stdout, "reconfigure"):
@@ -289,26 +294,11 @@ def compact_doc_lines(lines: list[str], max_lines: int = 80) -> list[str]:
 
 
 def find_previous_doc_snapshot(raw_dir: Path, token: str) -> dict | None:
-    """在当前周目录之前的周报 raw_doc_contents.json 中寻找同 token 的上一份快照。"""
-    week_dir = raw_dir.parent
-    reports_dir = week_dir.parent
-    if not reports_dir.exists():
-        return None
-
+    """只在本次输入目录的重采集快照中寻找同 token 的上一版。"""
     candidates = []
     snapshot_dir = raw_dir / "_snapshots"
     if snapshot_dir.exists():
         candidates.extend((path.stat().st_mtime, path) for path in snapshot_dir.glob("raw_doc_contents_*.json"))
-
-    for candidate in reports_dir.glob("*/raw/raw_doc_contents.json"):
-        if candidate.resolve() == (raw_dir / "raw_doc_contents.json").resolve():
-            continue
-        try:
-            if candidate.parent.parent.name >= week_dir.name:
-                continue
-        except Exception:
-            continue
-        candidates.append((candidate.stat().st_mtime, candidate))
 
     for _, path in sorted(candidates, reverse=True):
         data = load_json_file(path)
@@ -405,12 +395,7 @@ def collect_comment_items(comment_item: dict | None) -> list[dict]:
             if not text:
                 continue
             ts = reply.get("create_time") or card.get("create_time")
-            time_str = ""
-            if ts:
-                try:
-                    time_str = datetime.fromtimestamp(int(ts)).strftime("%Y-%m-%d %H:%M")
-                except Exception:
-                    time_str = str(ts)
+            time_str = format_timestamp(ts)
             rows.append({
                 "row_id": f"{card.get('comment_id', '')}:{reply.get('reply_id', '')}",
                 "time": time_str,
@@ -426,7 +411,7 @@ def group_messages_by_date(messages: list[dict]) -> dict[str, list[dict]]:
     """按日期分组消息"""
     groups = {}
     for msg in messages:
-        ts = msg.get("create_time", "")
+        ts = format_timestamp(msg.get("create_time", ""))
         if isinstance(ts, str) and len(ts) >= 10:
             date = ts[:10]
         else:
@@ -455,7 +440,7 @@ def generate_group_draft(name: str, messages: list[dict], draft_file: Path = Non
         lines.append("")
 
         for msg in by_date[date]:
-            time_str = msg.get("create_time", "")[11:16] if len(msg.get("create_time", "")) >= 16 else ""
+            time_str = format_timestamp(msg.get("create_time", ""))[11:]
             sender = msg.get("sender", {})
             sender_name = sender.get("name", sender.get("id", "未知")) if isinstance(sender, dict) else "未知"
             content = extract_message_content(msg, draft_file)
@@ -501,7 +486,7 @@ def generate_p2p_draft(name: str, messages: list[dict], draft_file: Path = None)
         lines.append("")
 
         for msg in by_date[date]:
-            time_str = msg.get("create_time", "")[11:16] if len(msg.get("create_time", "")) >= 16 else ""
+            time_str = format_timestamp(msg.get("create_time", ""))[11:]
             sender = msg.get("sender", {})
             sender_name = sender.get("name", sender.get("id", "未知")) if isinstance(sender, dict) else "未知"
             content = extract_message_content(msg, draft_file)
@@ -571,29 +556,38 @@ def first_present(data: dict, keys: list[str], default: str = ""):
     return default
 
 
-def format_timestamp(value) -> str:
-    """Format ISO strings, millisecond timestamps and second timestamps for drafts."""
+def parse_timestamp(value) -> datetime | None:
+    """Parse ISO, second and millisecond timestamps without losing precision."""
     if value in (None, ""):
-        return ""
+        return None
+    if isinstance(value, str) and value.isdigit():
+        value = int(value)
     if isinstance(value, (int, float)):
         ts = float(value)
         if ts > 10_000_000_000:
             ts = ts / 1000
         try:
-            return datetime.fromtimestamp(ts).strftime("%Y-%m-%d %H:%M")
+            return datetime.fromtimestamp(ts, DISPLAY_TIMEZONE)
         except Exception:
-            return str(value)
-
-    text = str(value)
-    if text.isdigit():
-        return format_timestamp(int(text))
+            return None
     try:
-        return datetime.fromisoformat(text.replace("Z", "+00:00")).strftime("%Y-%m-%d %H:%M")
+        parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=DISPLAY_TIMEZONE)
+        return parsed.astimezone(DISPLAY_TIMEZONE)
     except Exception:
-        pass
-    if len(text) >= 16 and "T" in text:
-        return text[:16].replace("T", " ")
-    return text
+        return None
+
+
+def format_timestamp(value) -> str:
+    """Normalize API times to the selected zone and retain the UTC offset."""
+    if value in (None, ""):
+        return ""
+    text = str(value)
+    if re.fullmatch(r"\d{4}-\d{2}-\d{2}", text):
+        return text
+    parsed = parse_timestamp(value)
+    return parsed.isoformat(sep=" ", timespec="minutes") if parsed else text
 
 
 def compact_value(value, max_len: int = 180) -> str:
@@ -952,11 +946,7 @@ def append_extra_fields(lines: list[str], item: dict, skip_keys: set[str], max_f
 def generate_tasks_draft(raw_dir: Path) -> str:
     data = load_json_file(raw_dir / "raw_tasks.json")
     collection_meta = load_json_file(raw_dir / "_meta.json")
-    window_end_text = str(collection_meta.get("end") or "")
-    try:
-        window_end = datetime.fromisoformat(window_end_text.replace("Z", "+00:00"))
-    except (TypeError, ValueError):
-        window_end = None
+    window_end = parse_timestamp(collection_meta.get("end"))
     tasks = collect_items(data, ["tasks", "items", "results"])
     lines = [
         "# 任务记录",
@@ -986,12 +976,9 @@ def generate_tasks_draft(raw_dir: Path) -> str:
             lines.append(f"  - 采集时状态: {status}")
         if completed_at:
             completion_label = "完成时间"
-            try:
-                completion_time = datetime.fromisoformat(str(completed_at_raw).replace("Z", "+00:00"))
-                if window_end is not None and completion_time >= window_end:
-                    completion_label = "完成时间（日报窗口之后）"
-            except (TypeError, ValueError):
-                pass
+            completion_time = parse_timestamp(completed_at_raw)
+            if window_end is not None and completion_time is not None and completion_time >= window_end:
+                completion_label = "完成时间（日报窗口之后）"
             lines.append(f"  - {completion_label}: {completed_at}")
         if assignees:
             lines.append(f"  - 相关人: {assignees}")
@@ -2090,7 +2077,7 @@ def make_chat_location(source: dict, output_dir: Path, idx: int) -> dict:
             if path:
                 images.append(resolve_local_path(path, output_dir / "index.html"))
         messages.append({
-            "time": msg.get("create_time", ""),
+            "time": format_timestamp(msg.get("create_time", "")),
             "sender": sender.get("name", "未知"),
             "mine": bool(msg.get("is_sent_by_me")),
             "type": msg.get("msg_type", ""),
@@ -2515,11 +2502,13 @@ def generate_html_index(output_dir: Path, raw_dir: Path):
     print(f"  -> 保存 {out_path.name} (HTML 地点浏览)")
 
 
-def main():
+def main(argv=None):
+    global DISPLAY_TIMEZONE
     parser = argparse.ArgumentParser(description="飞书周报草稿提取")
     parser.add_argument("--raw-dir", default="./raw", help="原始数据目录")
     parser.add_argument("--output-dir", default="./drafts", help="草稿输出目录")
-    args = parser.parse_args()
+    parser.add_argument("--timezone", help="阅读稿的 IANA 时区，默认取采集元数据，缺失时使用 UTC")
+    args = parser.parse_args(argv)
 
     raw_dir = Path(args.raw_dir)
     output_dir = Path(args.output_dir)
@@ -2527,6 +2516,20 @@ def main():
     if not raw_dir.exists():
         print(f"[错误] 原始数据目录不存在: {raw_dir}")
         sys.exit(1)
+
+    meta = load_json_file(raw_dir / "_meta.json")
+    zone_name = args.timezone or meta.get("timezone")
+    if zone_name:
+        try:
+            DISPLAY_TIMEZONE = ZoneInfo(zone_name)
+        except (ZoneInfoNotFoundError, ValueError, TypeError):
+            parser.error(f"无效时区: {zone_name}")
+    else:
+        start = str(meta.get("start") or meta.get("week_start") or "")
+        try:
+            DISPLAY_TIMEZONE = datetime.fromisoformat(start.replace("Z", "+00:00")).tzinfo or timezone.utc
+        except ValueError:
+            DISPLAY_TIMEZONE = timezone.utc
 
     output_dir.mkdir(parents=True, exist_ok=True)
 

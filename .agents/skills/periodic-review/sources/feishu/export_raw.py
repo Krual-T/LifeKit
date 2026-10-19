@@ -1001,7 +1001,8 @@ def main(argv=None):
     meta = {
         "start": week_start,
         "end": week_end,
-        "generated_at": datetime.now().isoformat(),
+        "timezone": TIMEZONE.key,
+        "generated_at": datetime.now(TIMEZONE).isoformat(),
         "current_user": {
             "open_id": current_user_open_id,
             "name": current_user_name,
