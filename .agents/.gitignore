@@ -9,6 +9,11 @@
 !/skills/research/
 !/skills/output-style/
 !/skills/read-local-documents/
+!/skills/product-management/
+!/skills/markdown-to-pdf/
 !/skills/write/
 /skills/write/*
 !/skills/write/ai-writing-rules/
+
+# Third-party reference library is restored at the pinned version on demand.
+/skills/product-management/references/.library/

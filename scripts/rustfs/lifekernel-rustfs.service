@@ -1,0 +1,17 @@
+[Unit]
+Description=LifeKernel private RustFS object storage
+After=network.target
+
+[Service]
+Type=simple
+EnvironmentFile=%h/.config/lifekernel/rustfs.env
+ExecStart=%h/.local/opt/rustfs/1.0.3/rustfs
+WorkingDirectory=%h/.local/share/lifekernel/rustfs
+Restart=on-failure
+RestartSec=5
+LimitNOFILE=65536
+UMask=0077
+NoNewPrivileges=true
+
+[Install]
+WantedBy=default.target
