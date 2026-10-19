@@ -1,4 +1,4 @@
-# Instance-owned configuration. Personality is loaded through the root AGENTS.md.
+# Copy to .codex/config.toml during initialization. Personality is loaded through AGENTS.md.
 # Start Codex with this instance's .venv/bin on PATH; trust this Hook in the host.
 [[hooks.PostToolUse]]
 matcher = "^(apply_patch|Bash)$"

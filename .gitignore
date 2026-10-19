@@ -28,10 +28,11 @@ node_modules/
 /config/*secret*
 /config/*credential*
 
-# Only non-secret instance configuration and shared roles belong in Git.
+# Only non-secret instance configuration, templates and shared roles belong in Git.
 /.codex/*
 !/.codex/config.toml
 !/.codex/agents/
+!/.codex/templates/
 .claude/
 
 # Editor and operating-system state.
