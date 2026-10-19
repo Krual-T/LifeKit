@@ -1,0 +1,6 @@
+# Only the two unmodified OFL fonts are redistributable bundled defaults.
+*.ttc
+*.ttf
+*.otf
+!SourceHanSerifSC-Regular.otf
+!SourceHanSansSC-Regular.otf
