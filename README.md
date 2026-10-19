@@ -2,7 +2,7 @@
 
 LifeKit 提供可组合的个人助手模板、记忆工具与 Skills。把个人记忆保存在自己的 Git 仓库中，通过公共上游持续更新功能；助手的名字、人格和日常记录由每个实例自己维护。
 
-公共仓库为 [Krual-T/LifeKit](https://github.com/Krual-T/LifeKit)，沿独立 T0 历史维护，功能按需使用：
+公共仓库为 [Krual-T/LifeKit](https://github.com/Krual-T/LifeKit)，首个公开版本为 [`v0.1.0`](https://github.com/Krual-T/LifeKit/tree/v0.1.0)。公共历史独立维护，功能按需使用：
 
 | 能力 | 入口 |
 | --- | --- |
@@ -171,13 +171,13 @@ wiki-index ensure --project-root .
 
 依赖文件变化时按该版本说明更新本实例环境。工具和 Skills 随合并更新；`AGENTS.md`、`Assistant.ini.md` 和 `.codex/config.toml` 只在初始化时从模板复制，后续指令或配置更新需对照模板差异人工采纳。需要迁移个人文件的版本应明确给出步骤。自己修改公共代码后仍可能出现 Git 冲突，需按实际含义解决。
 
-若曾按旧版 T0 的根 `templates/` 初始化，本次合并后须将原 `docs/instance-rules.md` 中的规则合入个人 `AGENTS.md`，可对照 `.codex/templates/AGENTS.ini.md` 逐段采纳；同时将个人 AGENTS、人格文件中对旧规则文件的引用改为根 `AGENTS.md` 内的规则。保留个人入口、近期 marker、人格与额外约定。本版已移除 `docs/`，不能继续依赖旧路径，也不要重新运行初始化覆盖已有文件。
+若曾按提取阶段的根 `templates/` 初始化，本次合并后须将原 `docs/instance-rules.md` 中的规则合入个人 `AGENTS.md`，可对照 `.codex/templates/AGENTS.ini.md` 逐段采纳；同时将个人 AGENTS、人格文件中对旧规则文件的引用改为根 `AGENTS.md` 内的规则。保留个人入口、近期 marker、人格与额外约定。本版已移除 `docs/`，不能继续依赖旧路径，也不要重新运行初始化覆盖已有文件。
 
 ## 现有私人实例首次接入
 
 已有私人历史的仓库，可以保留历史并一次性合并独立的公共版本。先在隔离工作树验证；公共候选和私人实例应始终使用不同目录与远程。
 
-1. 确认公共版本从不含私人祖先的独立根提交 T0 演进；不要把旧私人仓库的可见性直接改为公开。
+1. 确认公共版本从不含私人祖先的独立根提交演进；不要把旧私人仓库的可见性直接改为公开。
 2. 记录私人起点 P0，保留一个明确的本地分支作为恢复引用。完成本任务修改的提交，保留其他任务的工作区。
 3. 在干净的接入工作树添加公共 `upstream`，获取并选择经过审阅的公共提交。第一次执行 `git merge --no-commit --no-ff --allow-unrelated-histories <PUBLIC_COMMIT>`。后续版本有共同祖先，不再需要这个选项。
 4. 逐文件解决共享路径的 add/add 冲突：公共工具采用已验收版本；私人 Wiki、人格、实际 AGENTS、启用配置和未提取模块保留。对照 `.codex/templates/AGENTS.ini.md` 将所需规则合入个人 AGENTS，保留个人入口、近期 marker 与个性化约定；后续规则变化继续按模板差异采纳。忽略规则合并双方真实数据边界。不要用 `-s ours` 或整树覆盖假装完成接入。
@@ -189,7 +189,7 @@ wiki-index ensure --project-root .
 首次接入完成后，个人日常提交和公共更新可以交替存在：
 
 ```text
-公共：          T0 ───── T1 ───── T2
+公共：          C0 ───── C1 ───── C2
                 ╲       ╲        ╲
 私人：P0 ─────── M0 ─ P1 ─ M1 ─ P2 ─ M2
 ```
