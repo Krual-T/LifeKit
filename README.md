@@ -2,7 +2,7 @@
 
 LifeKit 提供可组合的个人助手模板、记忆工具与 Skills。把个人记忆保存在自己的 Git 仓库中，通过公共上游持续更新功能；助手的名字、人格和日常记录由每个实例自己维护。
 
-这是沿独立 T0 历史维护的本地公共候选，功能按需使用：
+公共仓库为 [Krual-T/LifeKit](https://github.com/Krual-T/LifeKit)，沿独立 T0 历史维护，功能按需使用：
 
 | 能力 | 入口 |
 | --- | --- |
@@ -16,7 +16,7 @@ LifeKit 提供可组合的个人助手模板、记忆工具与 Skills。把个�
 | S3 上传、直读、显式导出与可选 RustFS 自建 | [存储使用与初始化](scripts/rustfs/README.md) |
 | Codex 任务标题自动整理（可选插件） | [原作者插件的安装与配置](#codex-任务标题整理可选) |
 
-收藏和 DSH 不属于公共版。公开发布前仍需确定自有内容的许可证和发布仓库；随附第三方内容按各自的版权声明处理，见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+LifeKit 提供的原创代码与文档采用 [MIT 许可证](LICENSE)。第三方内容保留各自许可，见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。实例新增的 Wiki、个人记录和配置由实例维护者自行决定是否公开及如何授权。收藏和 DSH 不属于公共版。
 
 周期复盘按实例登记的阅读方式使用材料。飞书、Codex 对话、Git 的读取脚本可以按需选用；本地笔记或在线文档也可以直接阅读。复盘要求和通知规则由使用者决定，定时调用样板在 Skill 内；原件归档使用下方的通用存储工具。
 
@@ -35,10 +35,10 @@ LifeKit 提供可组合的个人助手模板、记忆工具与 Skills。把个�
 
 ## 建立自己的仓库
 
-从公共仓库 **clone**，保留共同历史。准备一个空的私有远程仓库，然后执行下列命令；将两个占位地址换成实际地址：
+从公共仓库 **clone**，保留共同历史。准备一个空的私有远程仓库，然后执行下列命令；将 `<YOUR_PRIVATE_REPOSITORY_URL>` 换成自己的私有仓库地址：
 
 ```bash
-git clone <PUBLIC_REPOSITORY_URL> MyLifeKit
+git clone https://github.com/Krual-T/LifeKit.git MyLifeKit
 cd MyLifeKit
 git remote rename origin upstream
 git remote add origin <YOUR_PRIVATE_REPOSITORY_URL>

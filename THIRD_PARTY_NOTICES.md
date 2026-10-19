@@ -1,8 +1,8 @@
 # Third-party notices
 
-This local public candidate does not yet assign a license to LifeKit's original
-code and documentation. The notices below retain the applicable terms for
-adapted third-party material; they do not license the entire repository.
+LifeKit's original code and documentation are licensed under the [MIT License](LICENSE).
+The third-party material and components listed below retain their respective
+copyright notices and licenses. LifeKit's license does not replace those terms.
 
 ## qu-ai-wei
 
