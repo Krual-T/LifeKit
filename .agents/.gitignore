@@ -3,6 +3,7 @@
 !/.gitignore
 !/skills/
 /skills/*
+!/skills/periodic-review/
 !/skills/using-wiki/
 !/skills/orchestrate-subagents/
 !/skills/write-technical-design/

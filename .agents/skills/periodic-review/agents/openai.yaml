@@ -1,0 +1,4 @@
+interface:
+  display_name: "周期性复盘"
+  short_description: "恢复日、周、月、年的经历与变化，围绕值得回看的内容交流并沉淀报告"
+  default_prompt: "使用 $periodic-review 带我回看近期经历，继续尚未结束的复盘。"

@@ -12,11 +12,12 @@ LifeKit 提供可组合的个人助手模板、记忆工具与 Skills。把个�
 | Word、PDF 等本地文档读取 | [Read Local Documents](.agents/skills/read-local-documents/SKILL.md) |
 | 产品需求、研究、PRD 与路线图 | [产品经理](.agents/skills/product-management/SKILL.md) |
 | Markdown 转 PDF | [Markdown 转 PDF](.agents/skills/markdown-to-pdf/SKILL.md) |
+| 按可选信源进行日、周、月、年复盘 | [周期复盘与初始化](.agents/skills/periodic-review/README.md) |
 | S3 上传、直读、显式导出与可选 RustFS 自建 | [存储使用与初始化](scripts/rustfs/README.md) |
 
 收藏和 DSH 不属于公共版。公开发布前仍需确定自有内容的许可证和发布仓库；随附第三方内容按各自的版权声明处理，见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
 
-来源采集、日周月年复盘、自动化样板与日证据归档已纳入整体范围，待复盘存储布局稳定后一起提取；当前候选尚未提供这些模块。
+周期复盘按实例登记的阅读方式使用材料。飞书、Codex 对话、Git 的读取脚本可以按需选用；本地笔记或在线文档也可以直接阅读。复盘要求和通知规则由使用者决定，定时调用样板在 Skill 内；原件归档使用下方的通用存储工具。
 
 ## 文件归属
 
@@ -27,6 +28,7 @@ LifeKit 提供可组合的个人助手模板、记忆工具与 Skills。把个�
 | `.codex/templates/Assistant.ini.md`：人格样板 | `Assistant.ini.md`：自己的助手名称、人格、语言与偏好 |
 | `.codex/templates/config.toml`：宿主配置样板 | `.codex/config.toml`：当前实例启用的宿主配置 |
 | Skill 的通用规则、脚本及资产 | 个人字体、排版选择和实际使用成果 |
+| 复盘 Skill 内的 `AGENTS.ini.md`、`Registry.ini.md` | 同一 Skill 内实际的 `AGENTS.md`、`Registry.md` 与非秘密来源配置 |
 
 公共提交不占用右侧实例路径，也不忽略上述 Wiki、AGENTS、人格和配置文件。模板只在首次初始化时复制；以后更新模板不会重写个人文件。`AGENTS.ini.md` 和 `Assistant.ini.md` 都是普通 Markdown，`.ini.md` 表示初始化样板。助手默认叫 Assistant，可在个人文件里修改；若也修改人格文件名，同步修改个人 `AGENTS.md` 的读取路径。
 
@@ -113,15 +115,15 @@ lark-cli auth login --recommend
 lark-cli auth status --json --verify
 ```
 
-按官方安装器完成 Skills 安装，并确认宿主能找到 `lark-suite`。由 Agent 协助登录时，先读该 Skill 的 `lark-shared`，按其授权链接、二维码与分步登录流程操作。选择本人需要的权限；CLI 凭据由宿主管理，不放入 Skill 或 Git。计划提取的采集流程需要飞书，Codex 和 Git 为自行配置的额外来源。
+按官方安装器完成 Skills 安装，并确认宿主能找到 `lark-suite`。由 Agent 协助登录时，先读该 Skill 的 `lark-shared`，按其授权链接、二维码与分步登录流程操作。选择本人需要的权限；CLI 凭据由宿主管理，不放入 Skill 或 Git。只有选用飞书读取或通知时才需要这项初始化。
 
-周期复盘模块尚未提取；飞书安装登录可先独立完成。后续版本会在复盘 Skill 中提供来源与时间样板，使用者选择接收人和发送权限后再启用定时任务。当前初始化不会注册这些任务或发送消息。
+按[周期复盘初始化说明](.agents/skills/periodic-review/README.md)在该 Skill 内建立实际 `AGENTS.md` 和 `Registry.md`，填写自己的要求与来源范围。两份样板属于复盘 Skill，与 `.codex/templates/` 中助手整体初始化样板各自维护。`.env.example` 提供临时目录与可选对象存储路径；用本地笔记即可开始，不要求飞书或 S3。定时器只需设置执行项目、时间和调用 Skill 的提示词；通知权限写在实例 AGENTS，初始化不会发送消息或注册任务。
 
 ### 对象存储与 RustFS
 
 已有 S3 服务时，按[存储说明](scripts/rustfs/README.md)提供连接配置，使用 `scripts/object_store.py --config <配置路径>`。希望在本机自建时，使用同一说明中的 RustFS 安装入口；它按当前用户生成本机配置与凭据。保持已有配置，不借初始化重启其他实例。
 
-存储沿用组件已有的宿主配置位置。为兼容已有实例，S3 配置、RustFS 服务和 AnyDoc 缓存继续使用原有的 `lifekernel` 名称；LifeKit 改名不搬迁这些运行文件。日常读取使用 S3 引用，显式导出才写本地文件。日证据的归档与本地释放由后续复盘模块负责；存储安装不会启用采集、通知或定时任务。
+存储沿用组件已有的宿主配置位置。为兼容已有实例，S3 配置、RustFS 服务和 AnyDoc 缓存继续使用原有的 `lifekernel` 名称；LifeKit 改名不搬迁这些运行文件。日常读取使用 S3 引用，显式导出才写本地文件。复盘原件按实例需要归档，确认可回读后再清理临时副本；存储安装不会启用采集、通知或定时任务。
 
 ## 使用和更新
 
