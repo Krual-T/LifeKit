@@ -2,16 +2,31 @@
 
 把个人记忆保存在自己的 Git 仓库中，通过公共上游持续更新记忆工具与 Skills。助手的名字、人格和日常记录由每个实例自己维护。
 
-这是首批 T0 本地候选。包含 OKF Wiki 导航与检索、调研、写作、技术设计、子智能体协作、解释输出和本地文档读取。周期复盘采集、账号连接、通知与定时任务不在本批范围内。公开发布前仍需确定自有内容的许可证和发布仓库；随附第三方内容按各自的版权声明处理，见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+这是沿独立 T0 历史维护的本地公共候选，功能按需使用：
+
+| 能力 | 入口 |
+| --- | --- |
+| 助手名称、人格和协作约定 | `.codex/templates/` 的三个初始化样板 |
+| OKF Wiki 记忆、导航与检索 | [Using Wiki](.agents/skills/using-wiki/SKILL.md) |
+| 调研、写作、技术设计、子智能体协作与解释输出 | `.agents/skills/` 中的对应 Skill |
+| Word、PDF 等本地文档读取 | [Read Local Documents](.agents/skills/read-local-documents/SKILL.md) |
+| 产品需求、研究、PRD 与路线图 | [产品经理](.agents/skills/product-management/SKILL.md) |
+| Markdown 转 PDF | [Markdown 转 PDF](.agents/skills/markdown-to-pdf/SKILL.md) |
+| S3 上传、直读、显式导出与可选 RustFS 自建 | [存储使用与初始化](scripts/rustfs/README.md) |
+
+收藏和 DSH 不属于公共版。公开发布前仍需确定自有内容的许可证和发布仓库；随附第三方内容按各自的版权声明处理，见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+
+来源采集、日周月年复盘、自动化样板与日证据归档已纳入整体范围，待复盘存储布局稳定后一起提取；当前候选尚未提供这些模块。
 
 ## 文件归属
 
 | 公共上游维护 | 个人私有 Git 维护 |
 | --- | --- |
-| `.agents/skills/`、`projects/okf-retrieval/`、`.codex/agents/`、依赖和忽略规则 | `wiki/`：自己的身份、经历、想法和日常记录 |
+| `.agents/skills/`、`projects/okf-retrieval/`、`scripts/`、`.codex/agents/`、依赖和忽略规则 | `wiki/`：自己的身份、经历、想法和日常记录 |
 | `.codex/templates/AGENTS.ini.md`：入口、协作与数据规则样板 | `AGENTS.md`：实例规则、个人入口与近期记忆索引 |
 | `.codex/templates/Assistant.ini.md`：人格样板 | `Assistant.ini.md`：自己的助手名称、人格、语言与偏好 |
 | `.codex/templates/config.toml`：宿主配置样板 | `.codex/config.toml`：当前实例启用的宿主配置 |
+| Skill 的通用规则、脚本及资产 | 个人字体、排版选择和实际使用成果 |
 
 公共提交不占用右侧实例路径，也不忽略上述 Wiki、AGENTS、人格和配置文件。模板只在首次初始化时复制；以后更新模板不会重写个人文件。`AGENTS.ini.md` 和 `Assistant.ini.md` 都是普通 Markdown，`.ini.md` 表示初始化样板。助手默认叫 Assistant，可在个人文件里修改；若也修改人格文件名，同步修改个人 `AGENTS.md` 的读取路径。
 
@@ -31,7 +46,7 @@ git config remote.pushDefault origin
 
 ## 初始化
 
-本批面向 Linux、Bash、Git、Python >=3.11、`uv` 与 Codex。Wiki 导航使用 Linux 文件锁。其他系统尚未验收。文档转换另需 Node.js >=20、npm 和 GNU `realpath`，仅在首次转换时下载固定版本 AnyDoc。
+当前面向 Linux、Bash、Git、Python >=3.11、`uv` 与 Codex。Wiki 导航使用 Linux 文件锁。其他系统尚未验收。文档读取另需 Node.js >=20、npm 和 GNU `realpath`，首次转换时下载固定版本 AnyDoc。PDF、飞书和自建存储各自的依赖在下方按需准备。
 
 以下命令在全新实例根目录执行。先创建实例文件；任一目标已存在就退出，不覆盖已有配置：
 
@@ -77,6 +92,36 @@ git push -u origin main
 ```
 
 不要在公共上游的工作目录里开始记录日常内容。
+
+## 按需初始化其他能力
+
+路径以当前实例为准，不设置统一的 LifeKernel 根目录变量，也不新增仓库级配置中心。Skill 的必要来源和时间选择放在自己的目录内；公共只跟踪另名初始化样板。重复初始化应保留已经存在的实际配置。
+
+### 产品经理与 PDF
+
+- 产品经理参考库按[固定版本恢复步骤](.agents/skills/product-management/references/catalog.md#本地库的来源与恢复)安装到该 Skill 的 `references/.library/`。这个隐藏目录不进入 Git，也不作为一组顶层 Skills 注册；库的许可与本仓库自有内容分开。
+- PDF 按 [Skill 的初始化与导出说明](.agents/skills/markdown-to-pdf/SKILL.md)准备 Python Markdown 解析器、Node/Playwright、Chromium、fontconfig 和 Poppler。可分发字体随 Skill 提供，生成 PDF 时嵌入，无需安装到系统；个人字体与样式使用现有参数覆盖。
+
+### 飞书与周期复盘
+
+飞书使用[官方 lark-cli 与 Skills](https://github.com/larksuite/cli)，不复制作者的全局 Skill、应用或登录态。以下为首次使用者在自己的机器上执行的安装与交互登录步骤；已有 CLI 或登录时先检查现状：
+
+```bash
+npx @larksuite/cli@latest install
+lark-cli config init
+lark-cli auth login --recommend
+lark-cli auth status --json --verify
+```
+
+按官方安装器完成 Skills 安装，并确认宿主能找到 `lark-suite`。由 Agent 协助登录时，先读该 Skill 的 `lark-shared`，按其授权链接、二维码与分步登录流程操作。选择本人需要的权限；CLI 凭据由宿主管理，不放入 Skill 或 Git。计划提取的采集流程需要飞书，Codex 和 Git 为自行配置的额外来源。
+
+周期复盘模块尚未提取；飞书安装登录可先独立完成。后续版本会在复盘 Skill 中提供来源与时间样板，使用者选择接收人和发送权限后再启用定时任务。当前初始化不会注册这些任务或发送消息。
+
+### 对象存储与 RustFS
+
+已有 S3 服务时，按[存储说明](scripts/rustfs/README.md)提供连接配置，使用 `scripts/object_store.py --config <配置路径>`。希望在本机自建时，使用同一说明中的 RustFS 安装入口；它按当前用户生成本机配置与凭据。保持已有配置，不借初始化重启其他实例。
+
+存储沿用组件已有的宿主配置位置。日常读取使用 S3 引用，显式导出才写本地文件。日证据的归档与本地释放由后续复盘模块负责；存储安装不会启用采集、通知或定时任务。
 
 ## 使用和更新
 

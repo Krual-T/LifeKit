@@ -7,6 +7,7 @@
 - 记住、回忆、纠正或忘记信息：使用 `.agents/skills/using-wiki/SKILL.md`。
 - 记忆正文与导航：初始化后查看 `wiki/index.md`；有近期路径就直接读取对应原文。
 - 可复用能力：按任务选择 `.agents/skills/` 中的 Skill。
+- S3 原文引用：使用 `scripts/object_store.py read`；配置和可选本机存储安装见 `scripts/rustfs/README.md`。
 
 ## 判断与执行
 

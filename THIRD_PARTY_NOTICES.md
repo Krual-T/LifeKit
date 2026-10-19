@@ -1,6 +1,6 @@
 # Third-party notices
 
-This local T0 candidate does not yet assign a license to LifeKernel's original
+This local public candidate does not yet assign a license to LifeKernel's original
 code and documentation. The notices below retain the applicable terms for
 adapted third-party material; they do not license the entire repository.
 
@@ -33,6 +33,18 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 ## Other components
+
+- The product-management Skill routes to Dean Peters's
+  [Product-Manager-Skills](https://github.com/deanpeters/Product-Manager-Skills),
+  pinned at `cfcb697f14b8891d8b3ec43c16c3547df3e70e13`. The reference library is
+  downloaded separately under **CC BY-NC-SA 4.0**, with its LICENSE and attribution
+  retained. LifeKernel's original-content license does not replace those terms.
+- The markdown-to-pdf Skill includes Adobe's Source Han Serif and Source Han Sans
+  font files under the SIL Open Font License 1.1. The original notices and license
+  text are retained beside the font files in that Skill's `assets/fonts/`.
+- RustFS is obtained separately from its official release. The deployment scripts
+  do not vendor or relicense the RustFS server. Lark CLI and its Skills are also
+  installed separately from the official larksuite project.
 
 - The output-style Skill retains its own [third-party notices](.agents/skills/output-style/THIRD_PARTY_NOTICES).
 - The OKF format reference is a local usage guide linking to the canonical
