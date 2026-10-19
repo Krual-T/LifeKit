@@ -1,4 +1,4 @@
 interface:
   display_name: "Using Wiki"
   short_description: "Manage long- and short-term Wiki memories and recent routes"
-  default_prompt: "Use $using-wiki to retrieve or update LifeKernel memories and the AGENTS.md short-term memory index."
+  default_prompt: "Use $using-wiki to retrieve or update this instance's memories and the AGENTS.md short-term memory index."

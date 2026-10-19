@@ -1,10 +1,10 @@
 # OKF 0.2 存储格式
 
-规范依据：[官方 SPEC.md](https://github.com/GoogleCloudPlatform/open-knowledge-format/blob/main/SPEC.md)。本页解释记忆读写所需的格式；有疑义时以官方规范为准。目录分类、AGENTS 索引和本地工具命令属于 LifeKernel，不是 OKF 标准。
+规范依据：[官方 SPEC.md](https://github.com/GoogleCloudPlatform/open-knowledge-format/blob/main/SPEC.md)。本页解释记忆读写所需的格式；有疑义时以官方规范为准。目录分类、AGENTS 索引和本地工具命令属于 LifeKit，不是 OKF 标准。
 
 ## 文件与目录
 
-- **Bundle**：一棵 Markdown 目录树；LifeKernel 的记忆 bundle 是 `wiki/`。
+- **Bundle**：一棵 Markdown 目录树；LifeKit 实例的记忆 bundle 是 `wiki/`。
 - **Concept**：一篇普通 Markdown 文档，可以记录人物、经历、想法或任务；并不要求抽象成理论，也不要求一条事实一个文件。
 - **Concept ID**：相对 bundle 根目录的文件路径去掉 `.md`，因此移动和改名时要同步引用。
 - **文件夹**：按内容需要组织页面，名称与层级由使用者决定，无固定分类表。

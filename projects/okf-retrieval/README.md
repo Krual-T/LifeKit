@@ -25,7 +25,7 @@ wiki-retrieval get notes/reading-plan.md --level l2 \
 ```
 
 The commands above are for a standalone installation; replace the example paths
-with your own. For a LifeKernel instance, follow the repository
+with your own. For a LifeKit instance, follow the repository
 [initialization instructions](../../README.md#初始化) to install into that
 instance's virtual environment instead of replacing a user-level command.
 

@@ -85,7 +85,7 @@ def remaining(deadline: float) -> float:
 def navigation_lock(project_root: Path, deadline: float):
     wiki_root = project_root / "wiki"
     if not wiki_root.is_dir() or not (project_root / "AGENTS.md").is_file():
-        raise ValueError(f"not a LifeKernel Wiki project: {project_root}")
+        raise ValueError(f"not a Wiki project: {project_root}")
     runtime = wiki_root / ".okf"
     runtime.mkdir(mode=0o700, exist_ok=True)
     lock = runtime / "navigation.lock"
@@ -134,7 +134,7 @@ def _reference_target(raw: str) -> str:
 
 
 def validate_wiki(wiki_root: Path) -> list[str]:
-    """Check the page structure required to generate LifeKernel navigation.
+    """Check the page structure required to generate Wiki navigation.
 
     Canonical OKF conformance belongs to ``wiki-retrieval sync``. Keeping this
     preflight deliberately narrow prevents the index tool from growing a
@@ -350,7 +350,7 @@ def render_indexes(wiki_root: Path) -> dict[Path, str]:
         ]
         index_path = directory / "index.md"
         if directory == wiki_root:
-            lines = ["---", 'okf_version: "0.2"', "---", "", "# LifeKernel LLM Wiki", ""]
+            lines = ["---", 'okf_version: "0.2"', "---", "", "# Wiki", ""]
         else:
             lines = [f"# {directory.name}", ""]
         if children:
@@ -634,7 +634,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     }
     for command, description in descriptions.items():
         child = commands.add_parser(command, help=description, description=description)
-        child.add_argument("--project-root", default=".", help="LifeKernel project root (default: current directory)")
+        child.add_argument("--project-root", default=".", help="Wiki project root (default: current directory)")
         if command == "ensure":
             child.add_argument("--timeout", type=float, default=20, help="Total lock and subprocess budget in seconds (default: 20)")
         elif command == "add":

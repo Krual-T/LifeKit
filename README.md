@@ -1,6 +1,6 @@
-# LifeKernel
+# LifeKit
 
-把个人记忆保存在自己的 Git 仓库中，通过公共上游持续更新记忆工具与 Skills。助手的名字、人格和日常记录由每个实例自己维护。
+LifeKit 提供可组合的个人助手模板、记忆工具与 Skills。把个人记忆保存在自己的 Git 仓库中，通过公共上游持续更新功能；助手的名字、人格和日常记录由每个实例自己维护。
 
 这是沿独立 T0 历史维护的本地公共候选，功能按需使用：
 
@@ -35,8 +35,8 @@
 从公共仓库 **clone**，保留共同历史。准备一个空的私有远程仓库，然后执行下列命令；将两个占位地址换成实际地址：
 
 ```bash
-git clone <PUBLIC_REPOSITORY_URL> MyLifeKernel
-cd MyLifeKernel
+git clone <PUBLIC_REPOSITORY_URL> MyLifeKit
+cd MyLifeKit
 git remote rename origin upstream
 git remote add origin <YOUR_PRIVATE_REPOSITORY_URL>
 git config remote.pushDefault origin
@@ -68,7 +68,7 @@ git config remote.pushDefault origin
 
 编辑 `Assistant.ini.md` 里的默认名称 `Assistant` 和交流偏好。根 `AGENTS.md` 包含实例规则，并明确要求助手读取人格文件；这不是宿主自动展开 Markdown 链接的机制，也没有覆盖 Codex 的内置指令。模板中的示例不应被当成使用者的事实写入 Wiki。
 
-在这个实例内安装工具，避免借用另一份 LifeKernel 的源码：
+在这个实例内安装工具，避免借用另一份实例的源码：
 
 ```bash
 uv sync --locked
@@ -87,7 +87,7 @@ uv run --script .agents/skills/using-wiki/scripts/wiki_index.py ensure --project
 
 ```bash
 git add AGENTS.md Assistant.ini.md .codex/config.toml wiki/index.md
-git commit -m "Initialize personal LifeKernel instance"
+git commit -m "Initialize personal LifeKit instance"
 git push -u origin main
 ```
 
@@ -95,7 +95,7 @@ git push -u origin main
 
 ## 按需初始化其他能力
 
-路径以当前实例为准，不设置统一的 LifeKernel 根目录变量，也不新增仓库级配置中心。Skill 的必要来源和时间选择放在自己的目录内；公共只跟踪另名初始化样板。重复初始化应保留已经存在的实际配置。
+路径以当前实例为准，不设置统一的 LifeKit 根目录变量，也不新增仓库级配置中心。Skill 的必要来源和时间选择放在自己的目录内；公共只跟踪另名初始化样板。重复初始化应保留已经存在的实际配置。
 
 ### 产品经理与 PDF
 
@@ -121,7 +121,7 @@ lark-cli auth status --json --verify
 
 已有 S3 服务时，按[存储说明](scripts/rustfs/README.md)提供连接配置，使用 `scripts/object_store.py --config <配置路径>`。希望在本机自建时，使用同一说明中的 RustFS 安装入口；它按当前用户生成本机配置与凭据。保持已有配置，不借初始化重启其他实例。
 
-存储沿用组件已有的宿主配置位置。日常读取使用 S3 引用，显式导出才写本地文件。日证据的归档与本地释放由后续复盘模块负责；存储安装不会启用采集、通知或定时任务。
+存储沿用组件已有的宿主配置位置。为兼容已有实例，S3 配置、RustFS 服务和 AnyDoc 缓存继续使用原有的 `lifekernel` 名称；LifeKit 改名不搬迁这些运行文件。日常读取使用 S3 引用，显式导出才写本地文件。日证据的归档与本地释放由后续复盘模块负责；存储安装不会启用采集、通知或定时任务。
 
 ## 使用和更新
 

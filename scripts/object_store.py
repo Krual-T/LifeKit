@@ -3,7 +3,7 @@
 # requires-python = ">=3.11"
 # dependencies = ["boto3>=1.40,<2"]
 # ///
-"""LifeKernel's S3 upload, direct read and export entry point. Credentials stay outside Git."""
+"""S3 upload, direct read and export entry point. Credentials stay outside Git."""
 
 from __future__ import annotations
 

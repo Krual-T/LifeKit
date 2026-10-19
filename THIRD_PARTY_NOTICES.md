@@ -1,6 +1,6 @@
 # Third-party notices
 
-This local public candidate does not yet assign a license to LifeKernel's original
+This local public candidate does not yet assign a license to LifeKit's original
 code and documentation. The notices below retain the applicable terms for
 adapted third-party material; they do not license the entire repository.
 
@@ -38,7 +38,7 @@ SOFTWARE.
   [Product-Manager-Skills](https://github.com/deanpeters/Product-Manager-Skills),
   pinned at `cfcb697f14b8891d8b3ec43c16c3547df3e70e13`. The reference library is
   downloaded separately under **CC BY-NC-SA 4.0**, with its LICENSE and attribution
-  retained. LifeKernel's original-content license does not replace those terms.
+  retained. LifeKit's original-content license does not replace those terms.
 - The markdown-to-pdf Skill includes Adobe's Source Han Serif and Source Han Sans
   font files under the SIL Open Font License 1.1. The original notices and license
   text are retained beside the font files in that Skill's `assets/fonts/`.
