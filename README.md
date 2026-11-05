@@ -26,12 +26,12 @@ LifeKit 提供的原创代码与文档采用 [MIT 许可证](LICENSE)。第三�
 | --- | --- |
 | `.agents/skills/`、`projects/okf-retrieval/`、`scripts/`、`.codex/agents/`、依赖和忽略规则 | `wiki/`：自己的身份、经历、想法和日常记录 |
 | `.codex/templates/AGENTS.ini.md`：入口、协作与数据规则样板 | `AGENTS.md`：实例规则、个人入口与近期记忆索引 |
-| `.codex/templates/Assistant.ini.md`：人格样板 | `Assistant.ini.md`：自己的助手名称、人格、语言与偏好 |
+| `.codex/templates/Assistant.ini.md`：人格与交互样板 | `.codex/model-instructions/Assistant.instructions.md`：自己的助手名称、人格、语言与偏好 |
 | `.codex/templates/config.toml`：宿主配置样板 | `.codex/config.toml`：当前实例启用的宿主配置 |
 | Skill 的通用规则、脚本及资产 | 个人字体、排版选择和实际使用成果 |
 | 复盘 Skill 内的 `AGENTS.ini.md`、`Registry.ini.md` | 同一 Skill 内实际的 `AGENTS.md`、`Registry.md` 与非秘密来源配置 |
 
-公共提交不占用右侧实例路径，也不忽略上述 Wiki、AGENTS、人格和配置文件。模板只在首次初始化时复制；以后更新模板不会重写个人文件。`AGENTS.ini.md` 和 `Assistant.ini.md` 都是普通 Markdown，`.ini.md` 表示初始化样板。助手默认叫 Assistant，可在个人文件里修改；若也修改人格文件名，同步修改个人 `AGENTS.md` 的读取路径。
+公共提交不占用右侧实例路径，也不忽略上述 Wiki、AGENTS、人格和配置文件。模板只在首次初始化时复制；以后更新模板不会重写个人文件。`AGENTS.ini.md` 和 `Assistant.ini.md` 都是普通 Markdown，`.ini.md` 表示初始化样板。助手默认叫 Assistant，可在实际指令文件里修改；若也修改文件名，同步修改 `.codex/config.toml` 的 `model_instructions_file`，并更新个人 AGENTS 中的维护位置链接。
 
 ## 建立自己的仓库
 
@@ -56,20 +56,22 @@ git config remote.pushDefault origin
 ```bash
 (
   set -eu
-  for target in AGENTS.md Assistant.ini.md .codex/config.toml wiki; do
+  for target in AGENTS.md .codex/model-instructions .codex/config.toml wiki; do
     if test -e "$target" || test -L "$target"; then
       printf '初始化停止：%s 已存在，请人工检查。\n' "$target" >&2
       exit 1
     fi
   done
-  mkdir -p .codex wiki
+  mkdir -p .codex/model-instructions wiki
   cp .codex/templates/AGENTS.ini.md AGENTS.md
-  cp .codex/templates/Assistant.ini.md Assistant.ini.md
+  cp .codex/templates/Assistant.ini.md .codex/model-instructions/Assistant.instructions.md
   cp .codex/templates/config.toml .codex/config.toml
 )
 ```
 
-编辑 `Assistant.ini.md` 里的默认名称 `Assistant` 和交流偏好。根 `AGENTS.md` 包含实例规则，并明确要求助手读取人格文件；这不是宿主自动展开 Markdown 链接的机制，也没有覆盖 Codex 的内置指令。模板中的示例不应被当成使用者的事实写入 Wiki。
+编辑 `.codex/model-instructions/Assistant.instructions.md` 里的默认名称 `Assistant`、性格与交流偏好。Codex 通过项目配置中的 `model_instructions_file` 加载该文件；路径相对 `.codex/config.toml` 所在目录。根 `AGENTS.md` 保存实例规则与记忆入口，其中的人格链接用于维护定位。模板中的示例不应被当成使用者的事实写入 Wiki。
+
+项目配置需要宿主信任后才会生效。修改指令或加载路径后，重新加载配置并用新会话核对实际入口。助手指令维护个性化行为，工具与权限机制继续由 Codex 宿主提供。配置机制见 [OpenAI 的项目配置说明](https://learn.chatgpt.com/docs/config-file/config-advanced#project-config-files-codexconfigtoml)与[配置参考](https://learn.chatgpt.com/docs/config-file/config-reference)。
 
 在这个实例内安装工具，避免借用另一份实例的源码：
 
@@ -89,7 +91,7 @@ uv run --script .agents/skills/using-wiki/scripts/wiki_index.py ensure --project
 审阅初始化文件与生成导航后，把它们提交到自己的私有仓库：
 
 ```bash
-git add AGENTS.md Assistant.ini.md .codex/config.toml wiki/index.md
+git add AGENTS.md .codex/model-instructions/Assistant.instructions.md .codex/config.toml wiki/index.md
 git commit -m "Initialize personal LifeKit instance"
 git push -u origin main
 ```
@@ -169,9 +171,18 @@ git merge upstream/main
 wiki-index ensure --project-root .
 ```
 
-依赖文件变化时按该版本说明更新本实例环境。工具和 Skills 随合并更新；`AGENTS.md`、`Assistant.ini.md` 和 `.codex/config.toml` 只在初始化时从模板复制，后续指令或配置更新需对照模板差异人工采纳。需要迁移个人文件的版本应明确给出步骤。自己修改公共代码后仍可能出现 Git 冲突，需按实际含义解决。
+依赖文件变化时按该版本说明更新本实例环境。工具和 Skills 随合并更新；`AGENTS.md`、`.codex/model-instructions/Assistant.instructions.md` 和 `.codex/config.toml` 只在初始化时从模板复制，后续指令或配置更新需对照模板差异人工采纳。需要迁移个人文件的版本应明确给出步骤。自己修改公共代码后仍可能出现 Git 冲突，需按实际含义解决。
 
 若曾按提取阶段的根 `templates/` 初始化，本次合并后须将原 `docs/instance-rules.md` 中的规则合入个人 `AGENTS.md`，可对照 `.codex/templates/AGENTS.ini.md` 逐段采纳；同时将个人 AGENTS、人格文件中对旧规则文件的引用改为根 `AGENTS.md` 内的规则。保留个人入口、近期 marker、人格与额外约定。本版已移除 `docs/`，不能继续依赖旧路径，也不要重新运行初始化覆盖已有文件。
+
+若当前人格仍保存在根目录 `Assistant.ini.md`，按以下步骤改用原生加载：
+
+1. 将该文件的现有正文移入 `.codex/model-instructions/Assistant.instructions.md`，保留个人修改；目标已存在时先比较并合并内容。
+2. 在 `.codex/config.toml` 顶层设置 `model_instructions_file = "model-instructions/Assistant.instructions.md"`，保留已启用的 Hook 和其他配置。
+3. 对照新版 AGENTS 模板整理实例入口，删除手动读取根人格文件的要求，更新维护位置链接。确认加载入口和正文一致后移除旧的根人格文件，并将这些变更提交到私人 Git。
+4. 由本人在实际宿主信任项目配置，重新加载后用新会话核对加载路径。`.codex/model-instructions/` 中的个人指令应能正常进入私人 Git。
+
+已有原生加载配置的实例继续沿用自己的文件名与路径，对照模板采纳正文即可。
 
 ## 现有私人实例首次接入
 
@@ -181,7 +192,7 @@ wiki-index ensure --project-root .
 2. 记录私人起点 P0，保留一个明确的本地分支作为恢复引用。完成本任务修改的提交，保留其他任务的工作区。
 3. 在干净的接入工作树添加公共 `upstream`，获取并选择经过审阅的公共提交。第一次执行 `git merge --no-commit --no-ff --allow-unrelated-histories <PUBLIC_COMMIT>`。后续版本有共同祖先，不再需要这个选项。
 4. 逐文件解决共享路径的 add/add 冲突：公共工具采用已验收版本；私人 Wiki、人格、实际 AGENTS、启用配置和未提取模块保留。对照 `.codex/templates/AGENTS.ini.md` 将所需规则合入个人 AGENTS，保留个人入口、近期 marker 与个性化约定；后续规则变化继续按模板差异采纳。忽略规则合并双方真实数据边界。不要用 `-s ours` 或整树覆盖假装完成接入。
-5. 新的模板不替换已有文件。当前人格若由其他宿主路径加载，可暂时保留，此时不要再加载 `Assistant.ini.md`。切换到人格模板时明确更新根 AGENTS 的读取路径，并移除旧的加载入口。确认始终只有一份当前人格来源。
+5. 新的模板不替换已有文件。已有原生人格加载配置时保留当前路径，只按需要采纳模板正文；切换入口时同步更新 `.codex/config.toml` 的 `model_instructions_file` 与 AGENTS 中的维护位置链接，确认实际加载后移除旧入口。确认始终只有一份当前人格来源。
 6. 在该工作树的独立环境运行记忆、索引和受影响能力测试；比对 P0 下的私人文件与个人配置。验证通过后提交双父合并 M0，确认 P0 与选定公共提交都是 M0 的祖先，再按项目约定合入私人开发分支。
 
 未提交的合并可在这个干净工作树里用 `git merge --abort` 退出；已提交的接入保留历史，通过后续修订处理问题。不要重写或删除旧私人历史。

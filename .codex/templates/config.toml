@@ -1,4 +1,7 @@
-# Copy to .codex/config.toml during initialization. Personality is loaded through AGENTS.md.
+# Copy to .codex/config.toml after creating the instance instructions file.
+# Paths are relative to the .codex directory containing this configuration.
+model_instructions_file = "model-instructions/Assistant.instructions.md"
+
 # Start Codex with this instance's .venv/bin on PATH; trust this Hook in the host.
 [[hooks.PostToolUse]]
 matcher = "^(apply_patch|Bash)$"
