@@ -181,7 +181,7 @@ wiki-retrieval query "要回想的主题" --wiki-root wiki --include-draft --lim
 wiki-index ensure --project-root .
 ```
 
-更新前先提交自己的完整工作，查看公共版本说明，再获取和合并选定版本：
+更新前先提交自己的完整工作，查看公共版本说明，再获取和合并选定版本。若出现冲突，先按下方迁移说明解决并完成合并，再更新命令入口和运行 `ensure`：
 
 ```bash
 git fetch upstream
@@ -201,6 +201,8 @@ wiki-index ensure --project-root .
 - 根 `AGENTS.md`、助手指令和个人脚本中的旧路径按目录表更新，`output-style` 的名称与目录改为 `presentation-style`。`write/ai-writing-rules/` 归入 `writing-pack/ai-writing-rules/`。
 - 实际复盘 `AGENTS.md`、`Registry.md`、`.env` 和私人来源参数随 Skill 进入 `memory-pack/periodic-review/`；Wiki 实际 `config.toml` 进入 `memory-pack/using-wiki/`。检查 Git 已移动的文件，源和目标同时存在时逐项比较、合并，不用初始化样板覆盖实例选择。
 - 产品隐藏参考库进入 `engineering-pack/product-management/references/.library/`；本地第三方 Skill 和 PDF 个人字体按各自用途迁移。忽略文件可能仍留在旧目录，确认引用已更新后再清理空目录。
+
+实际配置仅存在于私人分支时，Git 可能报告 `CONFLICT (file location)`，并把配置放到建议的新路径。用 `git status` 确认冲突文件，核对新路径中的正文仍为自己的选择；对每个已核对文件执行 `git add <新路径>`。全部冲突解决后执行 `git commit --no-edit` 完成合并。复盘的 `AGENTS.md`、`Registry.md` 与 Wiki 的 `config.toml` 均已在隔离实例验证这一过程；忽略的 `.env` 需要另行迁移。
 
 重新建立上方 `.venv/bin/wiki-index` 链接后运行 `ensure`。使用实际宿主检查新目录中的12项公共 Skill 可见；启用了 Hook 的实例再核对一次编辑反馈。无需重跑全新初始化命令。
 
