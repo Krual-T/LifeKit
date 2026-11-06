@@ -8,5 +8,5 @@ matcher = "^(apply_patch|Bash)$"
 
 [[hooks.PostToolUse.hooks]]
 type = "command"
-command = 'python3 "$(git rev-parse --show-toplevel)/.agents/skills/using-wiki/scripts/wiki_sync_hook.py"'
+command = 'python3 "$(git rev-parse --show-toplevel)/.agents/skills/memory-pack/using-wiki/scripts/wiki_sync_hook.py"'
 timeout = 30

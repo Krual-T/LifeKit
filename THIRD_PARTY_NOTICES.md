@@ -46,7 +46,10 @@ SOFTWARE.
   do not vendor or relicense the RustFS server. Lark CLI and its Skills are also
   installed separately from the official larksuite project.
 
-- The output-style Skill retains its own [third-party notices](.agents/skills/output-style/THIRD_PARTY_NOTICES).
+- The presentation-style Skill retains its own [third-party notices](.agents/skills/writing-pack/presentation-style/THIRD_PARTY_NOTICES).
+- The pytorch-patterns Skill is derived from
+  [Affaan Mustafa's ECC](https://github.com/affaan-m/ECC/tree/b38be6a7f6350964d59328b52f0624e1d1d552d1/skills/pytorch-patterns)
+  and retains its [MIT license](.agents/skills/research-pack/pytorch-patterns/LICENSE).
 - The OKF format reference is a local usage guide linking to the canonical
   specification; the upstream specification is not bundled.
 - PyYAML and the build tools are installed as dependencies. AnyDoc is downloaded

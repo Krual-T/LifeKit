@@ -4,11 +4,11 @@
 
 | 想回想什么 | 从哪里开始 | 说明 |
 | --- | --- | --- |
-| 身份、偏好、经历、感受、灵感、状态等长期或短期记忆 | [Using Wiki：查](.agents/skills/using-wiki/SKILL.md#查) | 有路径直接读原文；没有路径按 Skill 检索 |
+| 身份、偏好、经历、感受、灵感、状态等长期或短期记忆 | [Using Wiki：查](.agents/skills/memory-pack/using-wiki/SKILL.md#查) | 有路径直接读原文；没有路径按 Skill 检索 |
 | 记忆目录与近期主题 | [Wiki 导航](wiki/index.md)与下方“最近” | 索引提供入口，事实回到对应原文 |
-| 开始或继续日、周、月、年复盘 | [周期复盘](.agents/skills/periodic-review/SKILL.md) | 按该 Skill 内的实例要求与已登记来源执行 |
+| 开始或继续日、周、月、年复盘 | [周期复盘](.agents/skills/memory-pack/periodic-review/SKILL.md) | 按该 Skill 内的实例要求与已登记来源执行 |
 | 原始材料、S3 引用与可选存储配置 | [存储使用与初始化](scripts/rustfs/README.md) | 按实例实际采用的存储位置读取 |
-| 可调用能力与维护流程 | [`.agents/skills/`](.agents/skills/) | 按任务选择并组合已有 Skill |
+| 可调用能力与维护流程 | [`.agents/skills/`](.agents/skills) | 按任务选择并组合已有 Skill |
 
 ## 记忆维护
 

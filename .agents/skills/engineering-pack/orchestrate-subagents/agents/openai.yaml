@@ -1,0 +1,4 @@
+interface:
+  display_name: "协作编排"
+  short_description: "区分子智能体与独立会话，精简委派信息，跟进任务并验收交付"
+  default_prompt: "使用 $orchestrate-subagents 选择本任务适用的协作方式，安排分工并跟进验收。"

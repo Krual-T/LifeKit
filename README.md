@@ -7,18 +7,36 @@ LifeKit 提供可组合的个人助手模板、记忆工具与 Skills。把个�
 | 能力 | 入口 |
 | --- | --- |
 | 助手名称、人格和协作约定 | `.codex/templates/` 的三个初始化样板 |
-| OKF Wiki 记忆、导航与检索 | [Using Wiki](.agents/skills/using-wiki/SKILL.md) |
-| 调研、写作、技术设计、子智能体协作与解释输出 | `.agents/skills/` 中的对应 Skill |
-| Word、PDF 等本地文档读取 | [Read Local Documents](.agents/skills/read-local-documents/SKILL.md) |
-| 产品需求、研究、PRD 与路线图 | [产品经理](.agents/skills/product-management/SKILL.md) |
-| Markdown 转 PDF | [Markdown 转 PDF](.agents/skills/markdown-to-pdf/SKILL.md) |
-| 按可选信源进行日、周、月、年复盘 | [周期复盘与初始化](.agents/skills/periodic-review/README.md) |
+| OKF Wiki 记忆、导航与检索 | [Using Wiki](.agents/skills/memory-pack/using-wiki/SKILL.md) |
+| 通用思考方法与专题探索 | [find-methodology](.agents/skills/find-methodology/SKILL.md) |
+| 调研、写作、技术设计、协作编排与解释输出 | `.agents/skills/` 中的对应 Skill |
+| PyTorch 模型、训练、配置与实验记录 | [PyTorch Patterns](.agents/skills/research-pack/pytorch-patterns/SKILL.md) |
+| Word、PDF 等本地文档读取 | [Read Local Documents](.agents/skills/writing-pack/read-local-documents/SKILL.md) |
+| 产品需求、研究、PRD 与路线图 | [产品经理](.agents/skills/engineering-pack/product-management/SKILL.md) |
+| Markdown 转 PDF | [Markdown 转 PDF](.agents/skills/writing-pack/markdown-to-pdf/SKILL.md) |
+| 按可选信源进行日、周、月、年复盘 | [周期复盘与初始化](.agents/skills/memory-pack/periodic-review/README.md) |
 | S3 上传、直读、显式导出与可选 RustFS 自建 | [存储使用与初始化](scripts/rustfs/README.md) |
 | Codex 任务标题自动整理（可选插件） | [原作者插件的安装与配置](#codex-任务标题整理可选) |
 
 LifeKit 提供的原创代码与文档采用 [MIT 许可证](LICENSE)。第三方内容保留各自许可，见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。实例新增的 Wiki、个人记录和配置由实例维护者自行决定是否公开及如何授权。收藏和 DSH 不属于公共版。
 
 周期复盘按实例登记的阅读方式使用材料。飞书、Codex 对话、Git 的读取脚本可以按需选用；本地笔记或在线文档也可以直接阅读。复盘要求和通知规则由使用者决定，定时调用样板在 Skill 内；原件归档使用下方的通用存储工具。
+
+## Skill 目录
+
+当前提供12个独立入口，按2个根层入口与4个用途分组组织：
+
+| 目录 | Skill |
+| --- | --- |
+| 根层：通用方法与调研 | `find-methodology`、`research` |
+| `research-pack/`：科研工程 | `pytorch-patterns` |
+| `writing-pack/`：表达与文档 | `ai-writing-rules`、`presentation-style`、`read-local-documents`、`markdown-to-pdf` |
+| `engineering-pack/`：产品、工程与协作 | `product-management`、`write-technical-design`、`orchestrate-subagents` |
+| `memory-pack/`：记忆与复盘 | `using-wiki`、`periodic-review` |
+
+分组目录不设 `SKILL.md`，每项能力仍由自己的入口触发，可以跨组组合。`find-methodology` 按当前问题选择方法，任务 Skill 负责领域约束和最终交付。`presentation-style` 原名 `output-style`；公共文本表达继续使用 `ai-writing-rules`。
+
+第三方扩展可按需从原作者安装：[Research Starter Kit](https://github.com/LAMDA-NeSy/Research-Starter-Kit)提供科研入门手册，[Langfuse Skills](https://github.com/langfuse/skills)提供AI观测、提示词与评测指引。建议分别放在 `research-pack/research-starter-kit/`、`engineering-pack/langfuse/`，记录所选版本和来源；它们保留各自许可，实例的本地安装不随本仓库发布。安装不自动授予外部服务访问权限。
 
 ## 文件归属
 
@@ -78,10 +96,10 @@ git config remote.pushDefault origin
 ```bash
 uv sync --locked
 uv pip install --python .venv/bin/python --no-deps --editable ./projects/okf-retrieval
-ln -s ../../.agents/skills/using-wiki/scripts/wiki_index.py .venv/bin/wiki-index
+ln -s ../../.agents/skills/memory-pack/using-wiki/scripts/wiki_index.py .venv/bin/wiki-index
 export PATH="$PWD/.venv/bin:$PATH"
 
-uv run --script .agents/skills/using-wiki/scripts/wiki_index.py ensure --project-root .
+uv run --script .agents/skills/memory-pack/using-wiki/scripts/wiki_index.py ensure --project-root .
 ```
 
 首次 `ensure` 会生成空 Wiki 导航并预热脚本依赖；成功时返回 `ok=true`、`fresh=true`。`.okf/` 为可重建缓存，不提交。每次进入实例后都要让当前进程使用该实例 `.venv/bin`；`uv sync` 后若移除了 editable 包，重新运行上面的 `uv pip install`。
@@ -130,8 +148,8 @@ codex plugin add codex-task-title-organizer@codex-task-title-organizer
 
 ### 产品经理与 PDF
 
-- 产品经理参考库按[固定版本恢复步骤](.agents/skills/product-management/references/catalog.md#本地库的来源与恢复)安装到该 Skill 的 `references/.library/`。这个隐藏目录不进入 Git，也不作为一组顶层 Skills 注册；库的许可与本仓库自有内容分开。
-- PDF 按 [Skill 的初始化与导出说明](.agents/skills/markdown-to-pdf/SKILL.md)准备 Python Markdown 解析器、Node/Playwright、Chromium、fontconfig 和 Poppler。可分发字体随 Skill 提供，生成 PDF 时嵌入，无需安装到系统；个人字体与样式使用现有参数覆盖。
+- 产品经理参考库按[固定版本恢复步骤](.agents/skills/engineering-pack/product-management/references/catalog.md#本地库的来源与恢复)安装到该 Skill 的 `references/.library/`。这个隐藏目录不进入 Git，也不作为一组顶层 Skills 注册；库的许可与本仓库自有内容分开。
+- PDF 按 [Skill 的初始化与导出说明](.agents/skills/writing-pack/markdown-to-pdf/SKILL.md)准备 Python Markdown 解析器、Node/Playwright、Chromium、fontconfig 和 Poppler。可分发字体随 Skill 提供，生成 PDF 时嵌入，无需安装到系统；个人字体与样式使用现有参数覆盖。
 
 ### 飞书与周期复盘
 
@@ -146,7 +164,7 @@ lark-cli auth status --json --verify
 
 按官方安装器完成 Skills 安装，并确认宿主能找到 `lark-suite`。由 Agent 协助登录时，先读该 Skill 的 `lark-shared`，按其授权链接、二维码与分步登录流程操作。选择本人需要的权限；CLI 凭据由宿主管理，不放入 Skill 或 Git。只有选用飞书读取或通知时才需要这项初始化。
 
-按[周期复盘初始化说明](.agents/skills/periodic-review/README.md)在该 Skill 内建立实际 `AGENTS.md` 和 `Registry.md`，填写自己的要求与来源范围。两份样板属于复盘 Skill，与 `.codex/templates/` 中助手整体初始化样板各自维护。`.env.example` 提供临时目录与可选对象存储路径；用本地笔记即可开始，不要求飞书或 S3。定时器只需设置执行项目、时间和调用 Skill 的提示词；通知权限写在实例 AGENTS，初始化不会发送消息或注册任务。
+按[周期复盘初始化说明](.agents/skills/memory-pack/periodic-review/README.md)在该 Skill 内建立实际 `AGENTS.md` 和 `Registry.md`，填写自己的要求与来源范围。两份样板属于复盘 Skill，与 `.codex/templates/` 中助手整体初始化样板各自维护。`.env.example` 提供临时目录与可选对象存储路径；用本地笔记即可开始，不要求飞书或 S3。定时器只需设置执行项目、时间和调用 Skill 的提示词；通知权限写在实例 AGENTS，初始化不会发送消息或注册任务。
 
 ### 对象存储与 RustFS
 
@@ -156,7 +174,7 @@ lark-cli auth status --json --verify
 
 ## 使用和更新
 
-记忆格式与维护入口见 [Using Wiki](.agents/skills/using-wiki/SKILL.md)。开始时 Wiki 为空；只保存本人实际提供或核验过的信息。查询示例：
+记忆格式与维护入口见 [Using Wiki](.agents/skills/memory-pack/using-wiki/SKILL.md)。开始时 Wiki 为空；只保存本人实际提供或核验过的信息。查询示例：
 
 ```bash
 wiki-retrieval query "要回想的主题" --wiki-root wiki --include-draft --limit 3 --format text
@@ -168,10 +186,23 @@ wiki-index ensure --project-root .
 ```bash
 git fetch upstream
 git merge upstream/main
+ln -sfn ../../.agents/skills/memory-pack/using-wiki/scripts/wiki_index.py .venv/bin/wiki-index
+export PATH="$PWD/.venv/bin:$PATH"
 wiki-index ensure --project-root .
 ```
 
 依赖文件变化时按该版本说明更新本实例环境。工具和 Skills 随合并更新；`AGENTS.md`、`.codex/model-instructions/Assistant.instructions.md` 和 `.codex/config.toml` 只在初始化时从模板复制，后续指令或配置更新需对照模板差异人工采纳。需要迁移个人文件的版本应明确给出步骤。自己修改公共代码后仍可能出现 Git 冲突，需按实际含义解决。
+
+### 从扁平 Skill 目录升级
+
+本次目录调整会移动已有入口，并增加 `find-methodology`、`pytorch-patterns`。更新前提交需要保留的实例修改，另外保全未跟踪的实际配置和本地安装；合并后按上方目录表核对位置。
+
+- `.codex/config.toml` 中已启用的 Wiki Hook，将脚本路径改为 `.agents/skills/memory-pack/using-wiki/scripts/wiki_sync_hook.py`，保留自己的其他配置；未启用的 Hook 继续按需启用。
+- 根 `AGENTS.md`、助手指令和个人脚本中的旧路径按目录表更新，`output-style` 的名称与目录改为 `presentation-style`。`write/ai-writing-rules/` 归入 `writing-pack/ai-writing-rules/`。
+- 实际复盘 `AGENTS.md`、`Registry.md`、`.env` 和私人来源参数随 Skill 进入 `memory-pack/periodic-review/`；Wiki 实际 `config.toml` 进入 `memory-pack/using-wiki/`。检查 Git 已移动的文件，源和目标同时存在时逐项比较、合并，不用初始化样板覆盖实例选择。
+- 产品隐藏参考库进入 `engineering-pack/product-management/references/.library/`；本地第三方 Skill 和 PDF 个人字体按各自用途迁移。忽略文件可能仍留在旧目录，确认引用已更新后再清理空目录。
+
+重新建立上方 `.venv/bin/wiki-index` 链接后运行 `ensure`。使用实际宿主检查新目录中的12项公共 Skill 可见；启用了 Hook 的实例再核对一次编辑反馈。无需重跑全新初始化命令。
 
 若曾按提取阶段的根 `templates/` 初始化，本次合并后须将原 `docs/instance-rules.md` 中的规则合入个人 `AGENTS.md`，可对照 `.codex/templates/AGENTS.ini.md` 逐段采纳；同时将个人 AGENTS、人格文件中对旧规则文件的引用改为根 `AGENTS.md` 内的规则。保留个人入口、近期 marker、人格与额外约定。本版已移除 `docs/`，不能继续依赖旧路径，也不要重新运行初始化覆盖已有文件。
 
@@ -212,7 +243,7 @@ wiki-index ensure --project-root .
 在初始化并激活本实例环境后运行现有测试：
 
 ```bash
-python -m unittest discover -s .agents/skills/using-wiki/tests -p 'test_*.py'
+python -m unittest discover -s .agents/skills/memory-pack/using-wiki/tests -p 'test_*.py'
 python -m unittest discover -s projects/okf-retrieval/tests -p 'test_*.py'
 ```
 
